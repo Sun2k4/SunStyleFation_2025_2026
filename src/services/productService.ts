@@ -2,16 +2,41 @@ import { Product } from "../types";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import { mockDb } from "./mockDb";
 
+// Helper to map DB row to Frontend Product type
+const mapDbToProduct = (row: any): Product => ({
+  id: row.id,
+  name: row.name,
+  slug:
+    row.slug ||
+    row.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, ""),
+  price: Number(row.price),
+  category: row.category,
+  image: row.image_url, // Map image_url -> image
+  description: row.description,
+  rating: row.rating || 0, // Default values if not in DB
+  reviews: row.reviews || 0,
+  isNew: false,
+  stock: row.stock_quantity || 0, // Map stock_quantity -> stock
+  created_at: row.created_at,
+});
+
 export const productService = {
   getAllProducts: async (): Promise<Product[]> => {
     if (!isSupabaseConfigured()) return mockDb.products.getAll();
 
-    const { data, error } = await supabase.from("products").select("*");
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+
     if (error) {
       console.error("Supabase error:", error);
       return [];
     }
-    return data as Product[];
+    return data.map(mapDbToProduct);
   },
 
   getProductById: async (id: number): Promise<Product | undefined> => {
@@ -24,7 +49,7 @@ export const productService = {
       .eq("id", id)
       .single();
     if (error) return undefined;
-    return data as Product;
+    return mapDbToProduct(data);
   },
 
   getProductBySlug: async (slug: string): Promise<Product | undefined> => {
@@ -35,9 +60,12 @@ export const productService = {
       .from("products")
       .select("*")
       .eq("slug", slug)
-      .single();
-    if (error) return undefined;
-    return data as Product;
+      .maybeSingle();
+
+    if (error || !data) {
+      return undefined;
+    }
+    return mapDbToProduct(data);
   },
 
   createProduct: async (product: Omit<Product, "id">): Promise<Product> => {
@@ -52,13 +80,26 @@ export const productService = {
       return mockDb.products.add(newProduct);
     }
 
+    const dbPayload = {
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      description: product.description,
+      image_url: product.image,
+      stock_quantity: product.stock,
+    };
+
     const { data, error } = await supabase
       .from("products")
-      .insert([product])
+      .insert([dbPayload])
       .select()
       .single();
-    if (error) throw error;
-    return data as Product;
+
+    if (error) {
+      console.error("Error creating product:", error);
+      throw error;
+    }
+    return mapDbToProduct(data);
   },
 
   updateProduct: async (
@@ -67,14 +108,24 @@ export const productService = {
   ): Promise<Product | null> => {
     if (!isSupabaseConfigured()) return mockDb.products.update(id, updates);
 
+    const dbUpdates: any = { ...updates };
+    if (updates.image !== undefined) {
+      dbUpdates.image_url = updates.image;
+      delete dbUpdates.image;
+    }
+    if (updates.stock !== undefined) {
+      dbUpdates.stock_quantity = updates.stock;
+      delete dbUpdates.stock;
+    }
+
     const { data, error } = await supabase
       .from("products")
-      .update(updates)
+      .update(dbUpdates)
       .eq("id", id)
       .select()
       .single();
     if (error) return null;
-    return data as Product;
+    return mapDbToProduct(data);
   },
 
   deleteProduct: async (id: number): Promise<void> => {
@@ -83,5 +134,35 @@ export const productService = {
       return;
     }
     await supabase.from("products").delete().eq("id", id);
+  },
+
+  uploadImage: async (file: File): Promise<string> => {
+    if (!isSupabaseConfigured()) {
+      // Return a fake URL if mocking
+      return URL.createObjectURL(file);
+    }
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Upload to 'product-images' bucket
+    // Note: Ensure you have created a public bucket named 'product-images' in Supabase
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Error uploading image:", uploadError);
+      throw new Error("Failed to upload image");
+    }
+
+    const { data } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   },
 };

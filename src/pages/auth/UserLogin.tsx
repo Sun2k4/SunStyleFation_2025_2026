@@ -24,17 +24,54 @@ const UserLogin: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const validateInputs = () => {
+    const trimmedEmail = email.trim();
+
+    // 1. Validate Email format - STRICT Regex for Gmail
+    // Ensures:
+    // - Starts with valid characters (letters, numbers, dots, etc.)
+    // - Contains @gmail.com strictly at the end
+    // - Prevents cases like "user@gmai.com" or just "@gmail.com"
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+    if (!gmailRegex.test(trimmedEmail)) {
+      return "Invalid email format. Please enter a valid address ending in @gmail.com";
+    }
+
+    // 2. Validate Password length - Must be >= 6 chars
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+
+    // 3. Validate Full Name (Only for Registration)
+    if (!isLogin && fullName.trim().length < 3) {
+      return "Full Name must be at least 3 characters long.";
+    }
+
+    return null;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccessMessage(null);
 
+    // Run Synchronous Validation
+    const validationError = validateInputs();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
+
     try {
+      const trimmedEmail = email.trim();
+
       if (isLogin) {
         // --- LOGIN LOGIC ---
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: trimmedEmail,
           password,
         });
         if (error) throw error;
@@ -42,13 +79,38 @@ const UserLogin: React.FC = () => {
         navigate("/");
       } else {
         // --- REGISTER LOGIC ---
+        const trimmedName = fullName.trim();
+
+        // Check for duplicate name in profiles table
+        const { data: existingUser, error: checkError } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .ilike("full_name", trimmedName)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error("Error checking name uniqueness:", checkError);
+        }
+
+        if (existingUser) {
+          throw new Error(
+            "This name is already taken. Please choose another one."
+          );
+        }
+
+        // Create a default avatar based on the name
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          trimmedName
+        )}&background=random`;
+
         const { error } = await supabase.auth.signUp({
-          email,
+          email: trimmedEmail,
           password,
           options: {
             data: {
-              full_name: fullName,
-              role: "user",
+              full_name: trimmedName,
+              avatar_url: avatarUrl,
+              role: "user", // Default role matches DB constraint
             },
           },
         });
@@ -58,13 +120,15 @@ const UserLogin: React.FC = () => {
           "Account created successfully! Please check your email for verification."
         );
         setIsLogin(true);
-        setEmail("");
+        // Clear sensitive fields but keep email for convenience
         setPassword("");
       }
     } catch (err: any) {
       console.error("Auth Error:", err);
       if (err.message === "Invalid login credentials") {
         setError("Incorrect email or password. Please try again.");
+      } else if (err.message.includes("User already registered")) {
+        setError("This email is already registered. Please sign in instead.");
       } else {
         setError(
           err.message ||
@@ -112,7 +176,7 @@ const UserLogin: React.FC = () => {
             </div>
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder="Full Name (min 3 chars)"
               required={!isLogin}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -130,7 +194,7 @@ const UserLogin: React.FC = () => {
           </div>
           <input
             type="email"
-            placeholder="Email address"
+            placeholder="Email address (@gmail.com)"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -147,7 +211,7 @@ const UserLogin: React.FC = () => {
           </div>
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min 6 chars)"
             required
             minLength={6}
             value={password}
@@ -180,6 +244,7 @@ const UserLogin: React.FC = () => {
             setIsLogin(!isLogin);
             setError(null);
             setSuccessMessage(null);
+            if (!isLogin) setFullName("");
           }}
           className="text-primary-600 font-bold hover:text-primary-700 hover:underline transition-colors"
         >
