@@ -1,4 +1,4 @@
-export type UserRole = 'user' | 'admin';
+export type UserRole = "user" | "admin";
 
 export interface User {
   id: string;
@@ -34,7 +34,7 @@ export interface Order {
   userId: string;
   date: string;
   total: number;
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered';
+  status: "pending" | "processing" | "shipped" | "delivered";
   items: CartItem[];
 }
 

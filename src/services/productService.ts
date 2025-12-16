@@ -14,12 +14,12 @@ const mapDbToProduct = (row: any): Product => ({
       .replace(/(^-|-$)+/g, ""),
   price: Number(row.price),
   category: row.category,
-  image: row.image_url, // Map image_url -> image
+  image: row.image_url, // Map DB 'image_url' to Frontend 'image'
   description: row.description,
-  rating: row.rating || 0, // Default values if not in DB
+  rating: row.rating || 5.0, // Default if null
   reviews: row.reviews || 0,
   isNew: false,
-  stock: row.stock_quantity || 0, // Map stock_quantity -> stock
+  stock: row.stock_quantity || 0, // Map DB 'stock_quantity' to Frontend 'stock'
   created_at: row.created_at,
 });
 
@@ -53,6 +53,7 @@ export const productService = {
   },
 
   getProductBySlug: async (slug: string): Promise<Product | undefined> => {
+    // Note: If your DB doesn't have a slug column yet, this might fail or need fallback logic
     if (!isSupabaseConfigured())
       return mockDb.products.getAll().find((p) => p.slug === slug);
 
@@ -62,9 +63,7 @@ export const productService = {
       .eq("slug", slug)
       .maybeSingle();
 
-    if (error || !data) {
-      return undefined;
-    }
+    if (error || !data) return undefined;
     return mapDbToProduct(data);
   },
 
@@ -87,6 +86,7 @@ export const productService = {
       description: product.description,
       image_url: product.image,
       stock_quantity: product.stock,
+      // created_at is auto-handled by DB
     };
 
     const { data, error } = await supabase
@@ -108,15 +108,15 @@ export const productService = {
   ): Promise<Product | null> => {
     if (!isSupabaseConfigured()) return mockDb.products.update(id, updates);
 
-    const dbUpdates: any = { ...updates };
-    if (updates.image !== undefined) {
-      dbUpdates.image_url = updates.image;
-      delete dbUpdates.image;
-    }
-    if (updates.stock !== undefined) {
-      dbUpdates.stock_quantity = updates.stock;
-      delete dbUpdates.stock;
-    }
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.category) dbUpdates.category = updates.category;
+    if (updates.price) dbUpdates.price = updates.price;
+    if (updates.description) dbUpdates.description = updates.description;
+
+    // Handle mapped fields
+    if (updates.image !== undefined) dbUpdates.image_url = updates.image;
+    if (updates.stock !== undefined) dbUpdates.stock_quantity = updates.stock;
 
     const { data, error } = await supabase
       .from("products")
@@ -137,10 +137,7 @@ export const productService = {
   },
 
   uploadImage: async (file: File): Promise<string> => {
-    if (!isSupabaseConfigured()) {
-      // Return a fake URL if mocking
-      return URL.createObjectURL(file);
-    }
+    if (!isSupabaseConfigured()) return URL.createObjectURL(file);
 
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}_${Math.random()
@@ -148,8 +145,6 @@ export const productService = {
       .substr(2, 9)}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // Upload to 'product-images' bucket
-    // Note: Ensure you have created a public bucket named 'product-images' in Supabase
     const { error: uploadError } = await supabase.storage
       .from("product-images")
       .upload(filePath, file);

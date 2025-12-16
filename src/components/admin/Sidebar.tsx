@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Package,
   Users,
-  Settings,
+  ShoppingBag,
   ArrowLeft,
 } from "lucide-react";
 
@@ -12,9 +12,9 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+    { icon: ShoppingBag, label: "Orders", path: "/admin/orders" },
     { icon: Package, label: "Products", path: "/admin/products" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: Settings, label: "Settings", path: "/admin/settings" },
   ];
 
   return (
