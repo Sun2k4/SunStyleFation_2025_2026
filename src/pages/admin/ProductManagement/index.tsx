@@ -9,6 +9,8 @@ import {
   Save,
   Image as ImageIcon,
   Upload,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Popconfirm, message } from "antd";
 import { productService } from "../../../services/productService";
@@ -20,11 +22,13 @@ const AdminProducts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // --- 1. STATE PHÂN TRANG ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Số lượng sản phẩm mỗi trang
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 1. STATE MỚI: Lưu ID sản phẩm đang sửa (null = đang thêm mới)
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Form State
@@ -46,6 +50,11 @@ const AdminProducts: React.FC = () => {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  // Reset về trang 1 khi tìm kiếm
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -70,16 +79,14 @@ const AdminProducts: React.FC = () => {
     }
   };
 
-  // 2. LOGIC MỞ MODAL ĐỂ THÊM MỚI (Reset form)
   const handleOpenAddModal = () => {
-    setEditingId(null); // Đảm bảo không phải chế độ Edit
+    setEditingId(null);
     setFormData(initialFormState);
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsModalOpen(true);
   };
 
-  // 3. LOGIC MỞ MODAL ĐỂ SỬA (Đổ dữ liệu cũ vào form)
   const handleEdit = (product: Product) => {
     setEditingId(product.id);
     setFormData({
@@ -91,13 +98,13 @@ const AdminProducts: React.FC = () => {
       description: product.description || "",
     });
     setPreviewUrl(product.image || null);
-    setSelectedFile(null); // Reset file upload mới
+    setSelectedFile(null);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingId(null); // Reset trạng thái khi đóng
+    setEditingId(null);
   };
 
   const handleInputChange = (
@@ -121,7 +128,6 @@ const AdminProducts: React.FC = () => {
     }
   };
 
-  // 4. LOGIC SUBMIT (TỰ ĐỘNG CHỌN CREATE HOẶC UPDATE)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -146,11 +152,9 @@ const AdminProducts: React.FC = () => {
       }
 
       if (!finalImageUrl && !editingId) {
-        // Nếu thêm mới mà không có ảnh thì lấy ảnh mặc định
         finalImageUrl = "https://via.placeholder.com/400x500?text=No+Image";
       }
 
-      // Payload chung
       const productPayload = {
         name: formData.name,
         category: formData.category,
@@ -159,17 +163,13 @@ const AdminProducts: React.FC = () => {
         image: finalImageUrl,
         description: formData.description,
         slug: formData.name.toLowerCase().replace(/ /g, "-"),
-        // Các trường này có thể giữ nguyên hoặc xử lý tùy backend
         isNew: true,
       };
 
       if (editingId) {
-        // --- UPDATE ---
-        // Lưu ý: Bạn cần đảm bảo productService có hàm updateProduct
         await productService.updateProduct(editingId, productPayload);
         message.success("Product updated successfully");
       } else {
-        // --- CREATE ---
         await productService.createProduct({
           ...productPayload,
           rating: 0,
@@ -189,9 +189,20 @@ const AdminProducts: React.FC = () => {
     }
   };
 
+  // --- 2. LOGIC LỌC VÀ CẮT TRANG ---
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="space-y-6 relative">
@@ -201,14 +212,15 @@ const AdminProducts: React.FC = () => {
           <p className="text-gray-500">Manage your inventory</p>
         </div>
         <button
-          onClick={handleOpenAddModal} // Đổi hàm gọi ở đây
+          onClick={handleOpenAddModal}
           className="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
         >
           <Plus size={20} /> Add Product
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+        {/* Header & Search */}
         <div className="p-4 border-b border-gray-100">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
@@ -222,116 +234,169 @@ const AdminProducts: React.FC = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="p-8 flex justify-center">
-            <Loader2 className="animate-spin text-gray-400" />
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600">
-                <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
-                  <tr>
-                    <th className="px-6 py-4">Product</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Price</th>
-                    <th className="px-6 py-4">Stock</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={
-                              product.image || "https://via.placeholder.com/40"
-                            }
-                            alt=""
-                            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://via.placeholder.com/40?text=IMG";
-                            }}
-                          />
-                          <span className="font-medium text-gray-900">
-                            {product.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
-                          {product.category}
+        <div className="flex-1 overflow-x-auto">
+          {loading ? (
+            <div className="h-64 flex items-center justify-center">
+              <Loader2 className="animate-spin text-gray-400" size={32} />
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4">Product</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Price</th>
+                  <th className="px-6 py-4">Stock</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((product) => (
+                  <tr
+                    key={product.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={
+                            product.image || "https://via.placeholder.com/40"
+                          }
+                          alt=""
+                          className="w-10 h-10 rounded-lg object-cover bg-gray-100"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://via.placeholder.com/40?text=IMG";
+                          }}
+                        />
+                        <span className="font-medium text-gray-900 line-clamp-1 max-w-[200px]">
+                          {product.name}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">${product.price.toFixed(2)}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 ${
-                            product.stock < 20
-                              ? "text-red-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              product.stock < 20 ? "bg-red-600" : "bg-green-600"
-                            }`}
-                          ></span>
-                          {product.stock}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* 5. GẮN SỰ KIỆN NÚT EDIT */}
-                          <button
-                            onClick={() => handleEdit(product)}
-                            className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-
-                          <Popconfirm
-                            title="Delete Product"
-                            description={`Are you sure you want to delete "${product.name}"?`}
-                            onConfirm={() => handleDelete(product.id)}
-                            okText="Yes"
-                            cancelText="No"
-                            okButtonProps={{ danger: true }}
-                          >
-                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors">
-                              <Trash2 size={16} />
-                            </button>
-                          </Popconfirm>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredProducts.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-8 text-center text-gray-500"
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
+                        {product.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">${product.price.toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 ${
+                          product.stock < 20 ? "text-red-600" : "text-green-600"
+                        }`}
                       >
-                        No products found matching your search.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            product.stock < 20 ? "bg-red-600" : "bg-green-600"
+                          }`}
+                        ></span>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+
+                        <Popconfirm
+                          title="Delete Product"
+                          description={`Are you sure you want to delete "${product.name}"?`}
+                          onConfirm={() => handleDelete(product.id)}
+                          okText="Yes"
+                          cancelText="No"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        </Popconfirm>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {currentItems.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      No products found matching your search.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* --- 3. UI PHÂN TRANG (PAGINATION) --- */}
+        {!loading && filteredProducts.length > 0 && (
+          <div className="p-4 border-t border-gray-100 bg-white flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+              <span className="font-medium">
+                {Math.min(indexOfLastItem, filteredProducts.length)}
+              </span>{" "}
+              of <span className="font-medium">{filteredProducts.length}</span>{" "}
+              results
             </div>
-            <div className="p-4 border-t border-gray-100 bg-gray-50 text-center text-xs text-gray-500">
-              Showing {filteredProducts.length} entries
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {/* Hiển thị số trang */}
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (num) =>
+                      num === 1 ||
+                      num === totalPages ||
+                      (num >= currentPage - 1 && num <= currentPage + 1)
+                  )
+                  .map((number, index, array) => (
+                    <React.Fragment key={number}>
+                      {index > 0 && array[index - 1] !== number - 1 && (
+                        <span className="px-2 py-1 text-gray-400">...</span>
+                      )}
+                      <button
+                        onClick={() => paginate(number)}
+                        className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === number
+                            ? "bg-primary-500 text-white"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {number}
+                      </button>
+                    </React.Fragment>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
-          </>
+          </div>
         )}
       </div>
 
-      {/* Modal Form */}
+      {/* Modal Form (Giữ nguyên như cũ) */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 overflow-y-auto"
@@ -360,7 +425,6 @@ const AdminProducts: React.FC = () => {
                     className="text-lg leading-6 font-bold text-gray-900"
                     id="modal-title"
                   >
-                    {/* 6. ĐỔI TIÊU ĐỀ MODAL */}
                     {editingId ? "Edit Product" : "Add New Product"}
                   </h3>
                   <button
@@ -457,7 +521,6 @@ const AdminProducts: React.FC = () => {
                       Product Image
                     </label>
                     <div className="space-y-3">
-                      {/* Upload Button */}
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
@@ -477,7 +540,6 @@ const AdminProducts: React.FC = () => {
                         <span className="text-xs text-gray-500">OR</span>
                       </div>
 
-                      {/* URL Input */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <ImageIcon size={16} className="text-gray-400" />
@@ -497,7 +559,6 @@ const AdminProducts: React.FC = () => {
                         />
                       </div>
 
-                      {/* Preview Area */}
                       {(previewUrl || formData.image) && (
                         <div className="mt-2 w-full h-40 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
                           <img
@@ -546,7 +607,6 @@ const AdminProducts: React.FC = () => {
                         <Loader2 className="animate-spin" size={20} />
                       ) : (
                         <>
-                          {/* 7. ĐỔI TEXT BUTTON */}
                           <Save size={20} />{" "}
                           {editingId ? "Update Product" : "Save Product"}
                         </>
