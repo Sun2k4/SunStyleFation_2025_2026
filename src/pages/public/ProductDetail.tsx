@@ -7,6 +7,9 @@ import {
   Heart,
   Share2,
   Loader2,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { productService } from "../../services/productService";
@@ -17,6 +20,9 @@ const ProductDetail: React.FC = () => {
   const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("M");
+  const [selectedColor, setSelectedColor] = useState<string>("bg-gray-900");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -25,6 +31,7 @@ const ProductDetail: React.FC = () => {
       try {
         const data = await productService.getProductById(Number(id));
         setProduct(data || null);
+        if (data) setSelectedImage(data.image);
       } catch (error) {
         console.error("Error fetching product", error);
       } finally {
@@ -37,17 +44,21 @@ const ProductDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary-500" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
-        <Link to="/shop" className="text-primary-600 hover:underline">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+        <div className="bg-gray-50 p-6 rounded-full mb-4">
+          <ShoppingBag className="w-12 h-12 text-gray-300" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+        <p className="text-gray-500 mb-8 max-w-md">The product you are looking for might have been removed or is temporarily unavailable.</p>
+        <Link to="/shop" className="bg-gray-900 text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl">
           Back to Shop
         </Link>
       </div>
@@ -55,110 +66,135 @@ const ProductDetail: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Link
-        to="/shop"
-        className="inline-flex items-center text-gray-500 hover:text-gray-900 mb-8 transition-colors"
-      >
-        <ArrowLeft size={20} className="mr-2" /> Back to Shop
-      </Link>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
+      <nav className="flex items-center text-sm font-medium text-gray-500 mb-8">
+        <Link to="/shop" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+          <ArrowLeft size={16} /> Back to Shop
+        </Link>
+        <span className="mx-3">/</span>
+        <span className="text-gray-900">{product.category}</span>
+        <span className="mx-3">/</span>
+        <span className="truncate max-w-[200px]">{product.name}</span>
+      </nav>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-        <div className="space-y-4">
-          <div className="aspect-w-3 aspect-h-4 rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
+        {/* Gallery Section */}
+        <div className="space-y-6">
+          <div className="aspect-w-4 aspect-h-5 rounded-3xl overflow-hidden bg-gray-50 shadow-sm border border-gray-100 group">
             <img
-              src={product.image}
+              src={selectedImage || product.image}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden bg-gray-100 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
-              >
-                <img
-                  src={`https://picsum.photos/seed/${product.slug}${i}/200/200`}
-                  alt="Thumbnail"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+            <button
+              onClick={() => setSelectedImage(product.image)}
+              className={`aspect-w-1 aspect-h-1 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${selectedImage === product.image ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-transparent hover:border-gray-300'
+                }`}
+            >
+              <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+            </button>
+            {[1, 2, 3].map((i) => {
+              const imgUrl = `https://picsum.photos/seed/${product.slug}${i}/400/400`;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(imgUrl)}
+                  className={`aspect-w-1 aspect-h-1 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${selectedImage === imgUrl ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-transparent hover:border-gray-300'
+                    }`}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`Thumbnail ${i}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-primary-600 tracking-wider uppercase">
+        {/* Info Section */}
+        <div className="flex flex-col">
+          <div className="mb-2 flex items-center gap-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-50 text-primary-700 uppercase tracking-widest">
               {product.category}
             </span>
-            <div className="flex gap-2">
-              <button className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 transition-colors">
-                <Heart size={20} />
-              </button>
-              <button className="p-2 rounded-full bg-gray-50 text-gray-400 hover:text-blue-500 transition-colors">
-                <Share2 size={20} />
-              </button>
+            {product.isNew && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 uppercase tracking-widest">
+                New Arrival
+              </span>
+            )}
+          </div>
+
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
+              {product.name}
+            </h1>
+          </div>
+
+          <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
+            <div className="flex items-end gap-3">
+              <p className="text-4xl font-bold text-gray-900">
+                ${product.price.toFixed(2)}
+              </p>
+              {/* Simulated discount for visual appeal if needed later */}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                <span className="font-bold text-gray-900">{product.rating}</span>
+              </div>
+              <span className="text-gray-300">|</span>
+              <span className="text-gray-500 text-sm font-medium">{product.reviews} reviews</span>
             </div>
           </div>
 
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-            {product.name}
-          </h1>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={20}
-                  className={
-                    i < Math.floor(product.rating)
-                      ? "fill-current"
-                      : "text-gray-200"
-                  }
-                />
-              ))}
-            </div>
-            <span className="text-gray-500 text-sm">
-              ({product.reviews} reviews)
-            </span>
-          </div>
-
-          <p className="text-3xl font-bold text-gray-900 mb-6">
-            ${product.price.toFixed(2)}
-          </p>
-
-          <p className="text-gray-600 leading-relaxed mb-8">
+          <p className="text-gray-600 leading-relaxed text-lg mb-8">
             {product.description}
           </p>
 
-          <div className="space-y-6 mb-8">
+          <div className="space-y-8 mb-8">
+            {/* Color Selector */}
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Color</h3>
-              <div className="flex gap-3">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Select Color</h3>
+              <div className="flex gap-4">
                 {[
-                  "bg-gray-900",
-                  "bg-blue-800",
-                  "bg-red-700",
-                  "bg-yellow-500",
-                ].map((color, i) => (
+                  { name: 'Midnight', class: "bg-gray-900" },
+                  { name: 'Ocean', class: "bg-blue-800" },
+                  { name: 'Crimson', class: "bg-red-700" },
+                  { name: 'Sun', class: "bg-yellow-500" },
+                ].map((color) => (
                   <button
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${color} ring-2 ring-offset-2 ring-transparent hover:ring-gray-300 focus:ring-gray-900 transition-all`}
-                  ></button>
+                    key={color.name}
+                    onClick={() => setSelectedColor(color.class)}
+                    className={`group relative w-12 h-12 rounded-full flex items-center justify-center transition-all ${selectedColor === color.class ? 'ring-2 ring-gray-900 ring-offset-2' : 'hover:scale-110'
+                      }`}
+                    title={color.name}
+                  >
+                    <span className={`w-full h-full rounded-full ${color.class} border border-black/10 shadow-sm`}></span>
+                  </button>
                 ))}
               </div>
             </div>
 
+            {/* Size Selector */}
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Size</h3>
-              <div className="flex gap-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Select Size</h3>
+                <button className="text-sm text-primary-600 font-medium hover:underline">Size Guide</button>
+              </div>
+              <div className="grid grid-cols-4 gap-3">
                 {["S", "M", "L", "XL"].map((size) => (
                   <button
                     key={size}
-                    className="w-12 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-all"
+                    onClick={() => setSelectedSize(size)}
+                    className={`h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all border-2 ${selectedSize === size
+                        ? 'border-gray-900 bg-gray-900 text-white shadow-lg'
+                        : 'border-gray-200 text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                      }`}
                   >
                     {size}
                   </button>
@@ -167,29 +203,34 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-4">
             <button
               onClick={() => addToCart(product)}
-              className="flex-1 bg-gray-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-transform transform active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 bg-gray-900 text-white py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-gray-900/20 flex items-center justify-center gap-2"
             >
-              <ShoppingBag size={20} /> Add to Cart
+              <ShoppingBag className="w-5 h-5" /> Add to Cart
+            </button>
+            <button className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all">
+              <Heart className="w-6 h-6" />
+            </button>
+            <button className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200 transition-all">
+              <Share2 className="w-6 h-6" />
             </button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-gray-100 grid grid-cols-2 gap-4">
-            <div>
-              <span className="block text-xs text-gray-500 uppercase">
-                Availability
-              </span>
-              <span className="text-sm font-medium text-green-600">
-                In Stock ({product.stock})
-              </span>
+          {/* Trust Badges */}
+          <div className="grid grid-cols-3 gap-4 pt-8 mt-auto">
+            <div className="flex flex-col items-center text-center gap-2 p-3 bg-gray-50 rounded-2xl">
+              <Truck className="w-6 h-6 text-gray-400" />
+              <span className="text-xs font-semibold text-gray-600">Free Shipping</span>
             </div>
-            <div>
-              <span className="block text-xs text-gray-500 uppercase">SKU</span>
-              <span className="text-sm font-medium text-gray-900">
-                SUN-{product.id}-24
-              </span>
+            <div className="flex flex-col items-center text-center gap-2 p-3 bg-gray-50 rounded-2xl">
+              <ShieldCheck className="w-6 h-6 text-gray-400" />
+              <span className="text-xs font-semibold text-gray-600">100% Authentic</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 p-3 bg-gray-50 rounded-2xl">
+              <RotateCcw className="w-6 h-6 text-gray-400" />
+              <span className="text-xs font-semibold text-gray-600">30 Day Returns</span>
             </div>
           </div>
         </div>

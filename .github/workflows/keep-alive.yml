@@ -1,0 +1,19 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Chạy vào 00:00 UTC hàng ngày (tức 7h sáng VN)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Cho phép bấm nút chạy thử thủ công
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase to keep it awake
+        run: |
+          # Dưới đây là lệnh gửi request đến bảng 'users'
+          # QUAN TRỌNG: Hãy đổi chữ 'users' thành tên 1 bảng bất kỳ có trong DB của bạn (ví dụ: products, categories...)
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/users?select=*&limit=1" \
+          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
