@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const Cart: React.FC = () => {
@@ -51,53 +51,66 @@ const Cart: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            {cart.map((item) => (
-              <div key={item.id} className="group flex gap-6 p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="w-32 h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-100 relative">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                </div>
+            {cart.map((item) => {
+              const productPrice = item.product?.price || 0;
+              const priceAdjustment = item.variant?.price_adjustment || 0;
+              const finalPrice = productPrice + priceAdjustment;
 
-                <div className="flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-xl mb-1">
-                        <Link to={`/products/${item.id}`} className="hover:text-primary-600 transition-colors">{item.name}</Link>
-                      </h3>
-                      <p className="text-sm font-medium text-gray-500 bg-gray-50 inline-block px-2 py-1 rounded-md">{item.category}</p>
-                    </div>
-                    <p className="font-bold text-xl text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+              return (
+                <div key={item.id} className="group flex gap-6 p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+                  <div className="w-32 h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-100 relative">
+                    <img src={item.product?.image} alt={item.product?.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   </div>
 
-                  <div className="mt-auto flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:shadow text-gray-600 hover:text-gray-900 transition-all"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="font-bold text-gray-900 w-4 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:shadow text-gray-600 hover:text-gray-900 transition-all"
-                        >
-                          <Plus size={14} />
-                        </button>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-xl mb-1">
+                          <Link to={`/products/${item.product?.id}`} className="hover:text-primary-600 transition-colors">{item.product?.name}</Link>
+                        </h3>
+                        <div className="flex gap-2 items-center">
+                          <p className="text-sm font-medium text-gray-500 bg-gray-50 inline-block px-2 py-1 rounded-md">{item.product?.categoryName || 'N/A'}</p>
+                          {item.variant && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Size:</span> {item.variant.size} | <span className="font-medium">Color:</span> {item.variant.color}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      <p className="font-bold text-xl text-gray-900">${(finalPrice * item.quantity).toFixed(2)}</p>
                     </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="group/delete flex items-center gap-2 text-gray-400 hover:text-red-500 font-medium transition-colors p-2 rounded-lg hover:bg-red-50"
-                    >
-                      <Trash2 size={18} className="group-hover/delete:animate-bounce" />
-                      <span className="hidden sm:inline">Remove</span>
-                    </button>
+                    <div className="mt-auto flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                          <button
+                            onClick={() => item.id && updateQuantity(item.id, item.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:shadow text-gray-600 hover:text-gray-900 transition-all"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="font-bold text-gray-900 w-4 text-center">{item.quantity}</span>
+                          <button
+                            onClick={() => item.id && updateQuantity(item.id, item.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-sm hover:shadow text-gray-600 hover:text-gray-900 transition-all"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => item.id && removeFromCart(item.id)}
+                        className="group/delete flex items-center gap-2 text-gray-400 hover:text-red-500 font-medium transition-colors p-2 rounded-lg hover:bg-red-50"
+                      >
+                        <Trash2 size={18} className="group-hover/delete:animate-bounce" />
+                        <span className="hidden sm:inline">Remove</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8 flex justify-between items-center">

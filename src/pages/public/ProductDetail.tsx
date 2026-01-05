@@ -22,7 +22,8 @@ const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("M");
-  const [selectedColor, setSelectedColor] = useState<string>("bg-gray-900");
+  const [selectedColor, setSelectedColor] = useState<string>("Black");
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -72,7 +73,7 @@ const ProductDetail: React.FC = () => {
           <ArrowLeft size={16} /> Back to Shop
         </Link>
         <span className="mx-3">/</span>
-        <span className="text-gray-900">{product.category}</span>
+        <span className="text-gray-900">{product.categoryName || 'Uncategorized'}</span>
         <span className="mx-3">/</span>
         <span className="truncate max-w-[200px]">{product.name}</span>
       </nav>
@@ -119,7 +120,7 @@ const ProductDetail: React.FC = () => {
         <div className="flex flex-col">
           <div className="mb-2 flex items-center gap-3">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-50 text-primary-700 uppercase tracking-widest">
-              {product.category}
+              {product.categoryName || 'Uncategorized'}
             </span>
             {product.isNew && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 uppercase tracking-widest">
@@ -161,20 +162,20 @@ const ProductDetail: React.FC = () => {
             <div>
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Select Color</h3>
               <div className="flex gap-4">
-                {[
-                  { name: 'Midnight', class: "bg-gray-900" },
-                  { name: 'Ocean', class: "bg-blue-800" },
-                  { name: 'Crimson', class: "bg-red-700" },
-                  { name: 'Sun', class: "bg-yellow-500" },
-                ].map((color) => (
+                {/* Get unique colors from variants or use defaults */}
+                {(product?.variants && product.variants.length > 0
+                  ? [...new Set(product.variants.map(v => v.color))]
+                  : ['Black', 'White', 'Blue', 'Gray']
+                ).map((colorName) => (
                   <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.class)}
-                    className={`group relative w-12 h-12 rounded-full flex items-center justify-center transition-all ${selectedColor === color.class ? 'ring-2 ring-gray-900 ring-offset-2' : 'hover:scale-110'
+                    key={colorName}
+                    onClick={() => setSelectedColor(colorName)}
+                    className={`px-4 py-2 rounded-lg border-2 transition-all ${selectedColor === colorName
+                      ? 'border-gray-900 bg-gray-900 text-white'
+                      : 'border-gray-200 text-gray-900 hover:border-gray-400'
                       }`}
-                    title={color.name}
                   >
-                    <span className={`w-full h-full rounded-full ${color.class} border border-black/10 shadow-sm`}></span>
+                    {colorName}
                   </button>
                 ))}
               </div>
@@ -187,28 +188,88 @@ const ProductDetail: React.FC = () => {
                 <button className="text-sm text-primary-600 font-medium hover:underline">Size Guide</button>
               </div>
               <div className="grid grid-cols-4 gap-3">
-                {["S", "M", "L", "XL"].map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all border-2 ${selectedSize === size
+                {/* Get unique sizes from variants or use defaults */}
+                {(product?.variants && product.variants.length > 0
+                  ? [...new Set(product.variants.map(v => v.size))]
+                  : ["S", "M", "L", "XL"]
+                ).map((size) => {
+                  // Check if this size/color combination is available
+                  const variant = product?.variants?.find(
+                    v => v.size === size && v.color === selectedColor
+                  );
+                  const isAvailable = variant && (variant.stock_quantity || 0) > 0;
+
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      disabled={product?.variants && product.variants.length > 0 && !isAvailable}
+                      className={`h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all border-2 ${selectedSize === size
                         ? 'border-gray-900 bg-gray-900 text-white shadow-lg'
-                        : 'border-gray-200 text-gray-900 hover:border-gray-400 hover:bg-gray-50'
-                      }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+                        : isAvailable || !product?.variants
+                          ? 'border-gray-200 text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                          : 'border-gray-200 text-gray-300 cursor-not-allowed opacity-50'
+                        }`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
+              {/* Show stock info for selected variant */}
+              {product?.variants && product.variants.length > 0 && (() => {
+                const selectedVariant = product.variants.find(
+                  v => v.size === selectedSize && v.color === selectedColor
+                );
+                return selectedVariant ? (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Stock: <span className={selectedVariant.stock_quantity > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                      {selectedVariant.stock_quantity || 0} units
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-600 mt-2">This combination is not available</p>
+                );
+              })()}
             </div>
           </div>
 
           <div className="flex gap-4 mb-4">
             <button
-              onClick={() => addToCart(product)}
-              className="flex-1 bg-gray-900 text-white py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-gray-900/20 flex items-center justify-center gap-2"
+              onClick={async () => {
+                if (!product) return;
+                setAddingToCart(true);
+                try {
+                  // Find matching variant based on selected size and color
+                  const selectedVariant = product.variants?.find(
+                    v => v.size === selectedSize && v.color === selectedColor
+                  );
+
+                  if (selectedVariant) {
+                    // Use actual variant from database
+                    await addToCart(selectedVariant.id);
+                    alert(`Added ${product.name} (${selectedSize}, ${selectedColor}) to cart!`);
+                  } else {
+                    // Fallback: No variants in database yet
+                    // This happens if products were created before variant system
+                    alert('⚠️ This product doesn\'t have size/color variants yet. Please contact admin to add variants.');
+                    console.warn('Product has no variants:', product.id);
+                  }
+                } catch (error) {
+                  console.error('Error adding to cart:', error);
+                  alert('Failed to add to cart. Please try again.');
+                } finally {
+                  setAddingToCart(false);
+                }
+              }}
+              disabled={addingToCart || !product?.variants || product.variants.length === 0}
+              className="flex-1 bg-gray-900 text-white py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-gray-900/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ShoppingBag className="w-5 h-5" /> Add to Cart
+              {addingToCart ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <><ShoppingBag className="w-5 h-5" /> Add to Cart</>
+              )}
             </button>
             <button className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all">
               <Heart className="w-6 h-6" />

@@ -15,6 +15,8 @@ import Dashboard from "../pages/admin/Dashboard/index";
 import AdminProducts from "../pages/admin/ProductManagement/index";
 import AdminUsers from "../pages/admin/UserManagement/index";
 import AdminOrders from "../pages/admin/OrderManagement/index";
+import CategoryManagement from "../pages/admin/CategoryManagement/CategoryManagement";
+import DatabaseUtility from "../pages/admin/DatabaseUtility/index";
 import ProtectedRoute from "./ProtectedRoute";
 
 export const AppRoutes: React.FC = () => {
@@ -126,11 +128,31 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/admin/categories"
+        element={
+          <ProtectedRoute adminOnly>
+            <AdminLayout>
+              <CategoryManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/orders"
         element={
           <ProtectedRoute adminOnly>
             <AdminLayout>
               <AdminOrders />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/database"
+        element={
+          <ProtectedRoute adminOnly>
+            <AdminLayout>
+              <DatabaseUtility />
             </AdminLayout>
           </ProtectedRoute>
         }

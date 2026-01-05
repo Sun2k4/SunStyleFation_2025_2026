@@ -1,58 +1,107 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Product, CartItem } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { CartItem } from '../types';
+import { cartService } from '../services/cartService';
+import { useAuth } from './AuthContext';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  clearCart: () => void;
+  addToCart: (variantId: number, quantity?: number) => Promise<void>;
+  removeFromCart: (cartItemId: number) => Promise<void>;
+  updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   cartTotal: number;
   cartCount: number;
+  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const { user } = useAuth();
 
-  const addToCart = (product: Product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
+  // Load cart from database when user logs in
+  useEffect(() => {
+    if (user) {
+      refreshCart();
+    } else {
+      setCart([]);
+    }
+  }, [user]);
+
+  const refreshCart = async () => {
+    if (!user) return;
+    try {
+      const items = await cartService.getCartItems(user.id);
+      setCart(items);
+    } catch (error) {
+      console.error('Error refreshing cart:', error);
+    }
   };
 
-  const removeFromCart = (productId: number) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
+  const addToCart = async (variantId: number, quantity: number = 1) => {
+    if (!user) {
+      // TODO: Handle guest cart with localStorage
+      alert('Please login to add items to cart');
+      return;
+    }
+
+    try {
+      await cartService.addToCart(user.id, variantId, quantity);
+      await refreshCart();
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const removeFromCart = async (cartItemId: number) => {
+    try {
+      await cartService.removeItem(cartItemId);
+      await refreshCart();
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
+  };
+
+  const updateQuantity = async (cartItemId: number, quantity: number) => {
     if (quantity < 1) return;
-    setCart(prev => prev.map(item => 
-      item.id === productId ? { ...item, quantity } : item
-    ));
+    try {
+      await cartService.updateQuantity(cartItemId, quantity);
+      await refreshCart();
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = async () => {
+    if (!user) return;
+    try {
+      await cartService.clearCart(user.id);
+      setCart([]);
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
+  };
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartTotal = cart.reduce((sum, item) => {
+    const price = item.product?.price || 0;
+    const adjustment = item.variant?.price_adjustment || 0;
+    return sum + ((price + adjustment) * item.quantity);
+  }, 0);
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      addToCart, 
-      removeFromCart, 
-      updateQuantity, 
+    <CartContext.Provider value={{
+      cart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
       clearCart,
       cartTotal,
-      cartCount
+      cartCount,
+      refreshCart,
     }}>
       {children}
     </CartContext.Provider>

@@ -24,21 +24,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             New
           </div>
         )}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            addToCart(product);
-          }}
+        <Link
+          to={`/products/${product.id}`}
           className="absolute bottom-4 right-4 bg-white text-gray-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-primary-500 hover:text-white"
         >
           <ShoppingBag size={20} />
-        </button>
+        </Link>
       </div>
       <div className="p-4 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
           <div>
-             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{product.category}</p>
-             <h3 className="text-sm font-bold text-gray-900 line-clamp-2 min-h-[2.5rem]">
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{product.categoryName || 'Uncategorized'}</p>
+            <h3 className="text-sm font-bold text-gray-900 line-clamp-2 min-h-[2.5rem]">
               <Link to={`/products/${product.id}`}>
                 <span aria-hidden="true" className="absolute inset-0" />
                 {product.name}
@@ -46,7 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </h3>
           </div>
         </div>
-        
+
         <div className="mt-auto">
           <div className="flex items-center mb-2">
             <Star className="text-yellow-400 fill-current w-4 h-4" />

@@ -40,19 +40,23 @@ const AIOutfitAssistant: React.FC = () => {
   ];
 
   useEffect(() => {
-    try {
-      chatSessionRef.current = createStylistChat();
-    } catch (error) {
-      console.error("Failed to init chat", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: "err",
-          role: "model",
-          text: "I'm currently offline (API Key missing). Please try again later.",
-        },
-      ]);
-    }
+    const initChat = async () => {
+      try {
+        chatSessionRef.current = await createStylistChat();
+      } catch (error) {
+        console.error("Failed to init chat", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: "err",
+            role: "model",
+            text: "I'm currently offline (API Key missing). Please try again later.",
+          },
+        ]);
+      }
+    };
+
+    initChat();
   }, []);
 
   useEffect(() => {
@@ -88,14 +92,22 @@ const AIOutfitAssistant: React.FC = () => {
           "I'm having a bit of trouble connecting to my fashion database right now. Try again?",
       };
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error", error);
+
+      let errorMessage = "Oops! I lost my train of thought. Please try asking again.";
+
+      // Check for Quota Exceeded (429) or other specific errors
+      if (error.message?.includes("429") || error.status === 429 || error.toString().includes("429")) {
+        errorMessage = "I'm currently overloaded with requests (API Quota Exceeded). Please try again in a minute! 🕒";
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: "model",
-          text: "Oops! I lost my train of thought. Please try asking again.",
+          text: errorMessage,
         },
       ]);
     } finally {
@@ -118,11 +130,10 @@ const AIOutfitAssistant: React.FC = () => {
           <Link
             key={index}
             to={match[2]}
-            className={`font-bold underline transition-colors ${
-              role === "model"
-                ? "text-primary-600 hover:text-primary-800"
-                : "text-white hover:text-gray-200"
-            }`}
+            className={`font-bold underline transition-colors ${role === "model"
+              ? "text-primary-600 hover:text-primary-800"
+              : "text-white hover:text-gray-200"
+              }`}
           >
             {match[1]}
           </Link>
@@ -135,11 +146,10 @@ const AIOutfitAssistant: React.FC = () => {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center ${
-          isOpen
-            ? "bg-gray-800 text-white rotate-90"
-            : "bg-gradient-to-r from-primary-500 to-primary-600 text-white animate-bounce-subtle"
-        }`}
+        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center ${isOpen
+          ? "bg-gray-800 text-white rotate-90"
+          : "bg-gradient-to-r from-primary-500 to-primary-600 text-white animate-bounce-subtle"
+          }`}
         aria-label="Toggle Chat"
       >
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
@@ -174,19 +184,16 @@ const AIOutfitAssistant: React.FC = () => {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`flex gap-2 max-w-[85%] ${
-                    msg.role === "user" ? "flex-row-reverse" : "flex-row"
-                  }`}
+                  className={`flex gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-100 ${
-                      msg.role === "user" ? "bg-gray-100" : "bg-white"
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-100 ${msg.role === "user" ? "bg-gray-100" : "bg-white"
+                      }`}
                   >
                     {msg.role === "user" ? (
                       <User size={16} className="text-gray-600" />
@@ -195,11 +202,10 @@ const AIOutfitAssistant: React.FC = () => {
                     )}
                   </div>
                   <div
-                    className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                      msg.role === "user"
-                        ? "bg-primary-600 text-white rounded-tr-none"
-                        : "bg-white text-gray-700 border border-gray-100 rounded-tl-none"
-                    }`}
+                    className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === "user"
+                      ? "bg-primary-600 text-white rounded-tr-none"
+                      : "bg-white text-gray-700 border border-gray-100 rounded-tl-none"
+                      }`}
                   >
                     <div className="whitespace-pre-wrap">
                       {renderMessageText(msg.text, msg.role)}

@@ -4,23 +4,27 @@ import { mockDb } from "./mockDb";
 
 // Helper to map DB row to Frontend Product type
 const mapDbToProduct = (row: any): Product => ({
-  id: row.id,
-  name: row.name,
-  slug:
-    row.slug ||
-    row.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, ""),
-  price: Number(row.price),
-  category: row.category,
-  image: row.image_url, // Map DB 'image_url' to Frontend 'image'
-  description: row.description,
-  rating: row.rating || 5.0, // Default if null
-  reviews: row.reviews || 0,
+  // Spread all DB fields (id, name, price, category_id, description, created_at)
+  ...row,
+
+  // Map database field names to frontend field names
+  image: row.image_url || '',
+  stock: row.stock_quantity || 0,
+
+  // Generate slug if not present
+  slug: row.slug || row.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+
+  // Display fields from joins
+  categoryName: row.categories?.name,
+
+  // Nested relations
+  variants: row.product_variants || [],
+  reviewsList: row.reviews_list || [],
+
+  // Legacy fields for compatibility
+  rating: row.rating || 5.0,
+  reviews: row.reviews_count || 0,
   isNew: false,
-  stock: row.stock_quantity || 0, // Map DB 'stock_quantity' to Frontend 'stock'
-  created_at: row.created_at,
 });
 
 export const productService = {
@@ -29,11 +33,56 @@ export const productService = {
 
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        categories(id, name, slug)
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Supabase error:", error);
+      return [];
+    }
+    return data.map(mapDbToProduct);
+  },
+
+  // New Arrivals - products ordered by created_at desc, limit 8
+  getNewArrivals: async (limit: number = 8): Promise<Product[]> => {
+    if (!isSupabaseConfigured()) return mockDb.products.getAll().slice(0, limit);
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        categories(id, name, slug)
+      `)
+      .not("category_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching new arrivals:", error);
+      return [];
+    }
+    return data.map(mapDbToProduct);
+  },
+
+  // Best Sellers - products with high rating (simulated, no sold_count)
+  getBestSellers: async (limit: number = 8): Promise<Product[]> => {
+    if (!isSupabaseConfigured()) return mockDb.products.getAll().slice(0, limit);
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        categories(id, name, slug)
+      `)
+      .not("category_id", "is", null)
+      .order("rating", { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching best sellers:", error);
       return [];
     }
     return data.map(mapDbToProduct);
@@ -45,10 +94,19 @@ export const productService = {
 
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        categories(id, name, slug),
+        product_variants(id, size, color, stock_quantity, sku, price_adjustment),
+        reviews_list:reviews(id, rating, comment, created_at, user_id, profiles(full_name, avatar_url))
+      `)
       .eq("id", id)
       .single();
-    if (error) return undefined;
+
+    if (error) {
+      console.error("Error fetching product:", error);
+      return undefined;
+    }
     return mapDbToProduct(data);
   },
 
@@ -81,7 +139,7 @@ export const productService = {
 
     const dbPayload = {
       name: product.name,
-      category: product.category,
+      category_id: product.category_id, // Use category_id instead of category
       price: product.price,
       description: product.description,
       image_url: product.image,
@@ -110,7 +168,7 @@ export const productService = {
 
     const dbUpdates: any = {};
     if (updates.name) dbUpdates.name = updates.name;
-    if (updates.category) dbUpdates.category = updates.category;
+    if (updates.category_id !== undefined) dbUpdates.category_id = updates.category_id;
     if (updates.price) dbUpdates.price = updates.price;
     if (updates.description) dbUpdates.description = updates.description;
 

@@ -1,4 +1,11 @@
+import { Tables } from './supabase';
+
 export type UserRole = "user" | "admin";
+
+// Category inherits from auto-generated types
+export interface Category extends Tables<'categories'> {
+  productCount?: number; // Display field only
+}
 
 export interface User {
   id: string;
@@ -10,35 +17,61 @@ export interface User {
   gender?: string;
 }
 
-// Maps to 'products' table
-export interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  category: string;
-  image: string; // Frontend uses 'image', mapped from 'image_url'
+// Product inherits from auto-generated types
+export interface Product extends Omit<Tables<'products'>, 'image_url' | 'stock_quantity'> {
+  // Mapped fields for frontend compatibility
+  image: string; // Mapped from 'image_url'
   images?: string[];
-  description: string;
-  rating: number;
-  reviews: number;
+  stock: number; // Mapped from 'stock_quantity'
+
+  // Display fields populated via joins
+  categoryName?: string;
+  slug?: string;
+
+  // Nested relations
+  variants?: ProductVariant[];
+  reviewsList?: Review[];
+
+  // Legacy fields for compatibility
+  rating?: number;
+  reviews?: number;
   isNew?: boolean;
-  stock: number; // Frontend uses 'stock', mapped from 'stock_quantity'
-  created_at?: string;
 }
 
-export interface CartItem extends Product {
+// Product variant inherits from auto-generated types
+export interface ProductVariant extends Tables<'product_variants'> {
+  // Inherits: id, product_id, size, color, stock_quantity, sku, price_adjustment
+}
+
+// Review inherits from auto-generated types
+export interface Review extends Tables<'reviews'> {
+  // Inherits: id, product_id, user_id, rating, comment, created_at
+  userName?: string; // Display field populated via join
+  userAvatar?: string;
+}
+
+// Cart item now tracks variant instead of just product
+export interface CartItem {
+  id?: number;
+  user_id?: string;
+  variant_id: number;
   quantity: number;
+
+  // For display purposes (populated via joins)
+  product?: Product;
+  variant?: ProductVariant;
 }
 
-// Maps to 'orders' table
-export interface Order {
-  id: number;
-  userId: string;
-  date: string;
-  total: number;
-  status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+// Order inherits from auto-generated types with proper ENUM status
+export interface Order extends Omit<Tables<'orders'>, 'user_id' | 'created_at'> {
+  userId: string; // Mapped from user_id for frontend compatibility
+  date: string; // Mapped from created_at
+  total: number; // Mapped from total_amount
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
+  // Nested relations
   items?: OrderItem[];
+
   // Extended info for Admin UI
   userInfo?: {
     name: string;
@@ -46,26 +79,20 @@ export interface Order {
   };
 }
 
-// Maps to 'order_items' table
-export interface OrderItem {
-  id?: number;
-  orderId: number;
-  productId: number;
-  quantity: number;
-  priceAtPurchase: number;
-  product?: Product; // For display purposes
+// Order item inherits from auto-generated types
+export interface OrderItem extends Omit<Tables<'order_items'>, 'order_id' | 'product_id' | 'price_at_purchase'> {
+  orderId: number; // Mapped from order_id
+  productId: number; // Mapped from product_id
+  priceAtPurchase: number; // Mapped from price_at_purchase
+
+  // For display purposes
+  product?: Product;
+  variant?: ProductVariant;
 }
 
-// Maps to 'user_addresses' table
-export interface Address {
-  id?: number;
-  user_id: string;
-  recipient_name: string;
-  phone_number: string;
-  address_line: string;
-  city: string;
-  district: string;
-  is_default: boolean;
+// User address inherits from auto-generated types
+export interface Address extends Tables<'user_addresses'> {
+  // Inherits all fields from database
 }
 
 export interface ApiResponse<T> {

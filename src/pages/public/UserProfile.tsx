@@ -57,7 +57,7 @@ const UserProfile: React.FC = () => {
 
       // Cập nhật UI ngay lập tức
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: "Cancelled" } : o))
+        prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o))
       );
     } catch (error) {
       console.error("Cancel failed", error);
@@ -175,22 +175,23 @@ const UserProfile: React.FC = () => {
                       {/* Dùng Antd Tag thay cho span thủ công */}
                       <Tag
                         color={
-                          order.status === "Pending"
+                          order.status === "pending"
                             ? "orange"
-                            : order.status === "Processing"
-                            ? "blue"
-                            : order.status === "Shipped"
-                            ? "purple"
-                            : order.status === "Delivered"
-                            ? "green"
-                            : "red"
+                            : order.status === "processing"
+                              ? "blue"
+                              : order.status === "shipped"
+                                ? "purple"
+                                : order.status === "delivered"
+                                  ? "green"
+                                  : "red"
                         }
+                        className="capitalize"
                       >
                         {order.status}
                       </Tag>
 
                       {/* Cancel Button với Popconfirm - Chỉ hiện khi Pending */}
-                      {order.status === "Pending" && (
+                      {order.status === "pending" && (
                         <Popconfirm
                           title="Hủy đơn hàng?"
                           description="Bạn có chắc chắn muốn hủy đơn hàng này không?"

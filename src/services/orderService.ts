@@ -15,6 +15,10 @@ export const orderService = {
         created_at, 
         status, 
         total_amount,
+        payment_method,
+        shipping_address_id,
+        tracking_number,
+        notes,
         user_id,
         profiles:user_id (
           full_name,
@@ -44,6 +48,11 @@ export const orderService = {
       date: row.created_at,
       total: Number(row.total_amount),
       status: row.status,
+      total_amount: Number(row.total_amount),
+      payment_method: row.payment_method,
+      shipping_address_id: row.shipping_address_id,
+      tracking_number: row.tracking_number,
+      notes: row.notes,
       userInfo: {
         name: row.profiles?.full_name || "Unknown User",
         email: row.profiles?.email || "No Email",
@@ -100,6 +109,10 @@ export const orderService = {
         created_at, 
         status, 
         total_amount,
+        payment_method,
+        shipping_address_id,
+        tracking_number,
+        notes,
         order_items (
           id,
           quantity,
@@ -125,6 +138,11 @@ export const orderService = {
       date: row.created_at,
       total: Number(row.total_amount),
       status: row.status,
+      total_amount: Number(row.total_amount),
+      payment_method: row.payment_method,
+      shipping_address_id: row.shipping_address_id,
+      tracking_number: row.tracking_number,
+      notes: row.notes,
       items: row.order_items.map((item: any) => ({
         id: item.id,
         orderId: row.id,
@@ -145,8 +163,8 @@ export const orderService = {
     if (!isSupabaseConfigured()) {
       const orders = mockDb.orders.getAll();
       const order = orders.find((o) => o.id === orderId);
-      if (order && order.status === "Pending") {
-        order.status = "Cancelled";
+      if (order && order.status === "pending") {
+        order.status = "cancelled";
         mockDb.orders.save(orders);
         return true;
       }
@@ -157,9 +175,9 @@ export const orderService = {
     // We explicitly check status='Pending' in the query for extra safety/clarity
     const { error, data } = await supabase
       .from("orders")
-      .update({ status: "Cancelled" })
+      .update({ status: "cancelled" })
       .eq("id", orderId)
-      .eq("status", "Pending") // Ensures we only cancel if currently Pending
+      .eq("status", "pending") // Ensures we only cancel if currently pending
       .select("id"); // Get data to verify update happened
 
     if (error) {
@@ -200,8 +218,13 @@ export const orderService = {
         userId,
         date: new Date().toISOString(),
         total,
-        status: "Pending",
+        total_amount: total,
+        status: "pending",
         items,
+        payment_method: "credit_card",
+        shipping_address_id: null,
+        tracking_number: null,
+        notes: null,
       } as unknown as Order;
       return mockDb.orders.add(mockOrder);
     }
@@ -212,7 +235,7 @@ export const orderService = {
         {
           user_id: userId,
           total_amount: total,
-          status: "Pending",
+          status: "pending",
         },
       ])
       .select()
@@ -223,12 +246,23 @@ export const orderService = {
     }
 
     const orderId = orderData.id;
-    const orderItems = items.map((item) => ({
-      order_id: orderId,
-      product_id: item.id,
-      quantity: item.quantity,
-      price_at_purchase: item.price,
-    }));
+
+    // Map cart items to order items
+    // New CartItem structure: { variant_id, quantity, product: {...}, variant: {...} }
+    const orderItems = items.map((item) => {
+      const productId = item.product?.id;
+      const basePrice = item.product?.price || 0;
+      const priceAdjustment = item.variant?.price_adjustment || 0;
+      const finalPrice = basePrice + priceAdjustment;
+
+      return {
+        order_id: orderId,
+        product_id: productId,
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        price_at_purchase: finalPrice,
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from("order_items")
@@ -236,12 +270,33 @@ export const orderService = {
 
     if (itemsError) throw itemsError;
 
+    // 4. Update Stock (Decrement quantity)
+    // Run sequentially to avoid race conditions or use RPC
+    for (const item of orderItems) {
+      if (item.variant_id) {
+        const { error: stockError } = await supabase.rpc('decrement_stock', {
+          p_variant_id: item.variant_id,
+          p_quantity: item.quantity
+        });
+
+        if (stockError) {
+          console.error(`Failed to decrement stock for variant ${item.variant_id}:`, stockError);
+          // Optional: We could rollback here, but for now just log it
+        }
+      }
+    }
+
     return {
       id: orderId,
       userId,
       date: orderData.created_at,
       total: orderData.total_amount,
+      total_amount: orderData.total_amount,
       status: orderData.status,
+      payment_method: orderData.payment_method,
+      shipping_address_id: orderData.shipping_address_id,
+      tracking_number: orderData.tracking_number,
+      notes: orderData.notes,
       items: items as any,
     };
   },

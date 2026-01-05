@@ -17,14 +17,14 @@ import { Order } from "../../../types";
 // Đã xóa import useToast
 
 // Define the strict workflow steps
-const ORDER_STEPS = ["Pending", "Processing", "Shipped", "Delivered"];
+const ORDER_STEPS = ["pending", "processing", "shipped", "delivered"];
 
 const AdminOrders: React.FC = () => {
   // Đã xóa hook useToast
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("All");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   // Modal State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -76,15 +76,15 @@ const AdminOrders: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Processing":
+      case "processing":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Shipped":
+      case "shipped":
         return "bg-purple-100 text-purple-800 border-purple-200";
-      case "Delivered":
+      case "delivered":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Cancelled":
+      case "cancelled":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
@@ -94,48 +94,48 @@ const AdminOrders: React.FC = () => {
   // Helper to determine allowed next actions based on current status
   const getAllowedActions = (currentStatus: string) => {
     switch (currentStatus) {
-      case "Pending":
+      case "pending":
         return [
           {
-            status: "Processing",
+            status: "processing",
             label: "Approve & Process",
             icon: Clock,
             color: "bg-blue-600 hover:bg-blue-700",
           },
           {
-            status: "Cancelled",
+            status: "cancelled",
             label: "Reject Order",
             icon: X,
             color: "bg-red-600 hover:bg-red-700",
           },
         ];
-      case "Processing":
+      case "processing":
         return [
           {
-            status: "Shipped",
+            status: "shipped",
             label: "Ship Order",
             icon: Truck,
             color: "bg-purple-600 hover:bg-purple-700",
           },
           {
-            status: "Cancelled",
+            status: "cancelled",
             label: "Cancel Order",
             icon: X,
             color: "bg-red-600 hover:bg-red-700",
           },
         ];
-      case "Shipped":
+      case "shipped":
         return [
           {
-            status: "Delivered",
+            status: "delivered",
             label: "Confirm Delivery",
             icon: Check,
             color: "bg-green-600 hover:bg-green-700",
           },
         ];
-      case "Delivered":
+      case "delivered":
         return []; // Terminal state
-      case "Cancelled":
+      case "cancelled":
         return []; // Terminal state
       default:
         return [];
@@ -149,7 +149,7 @@ const AdminOrders: React.FC = () => {
       order.userInfo?.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter =
-      filterStatus === "All" || order.status === filterStatus;
+      filterStatus === "all" || order.status === filterStatus;
 
     return matchesSearch && matchesFilter;
   });
@@ -178,15 +178,14 @@ const AdminOrders: React.FC = () => {
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
-            {["All", ...ORDER_STEPS, "Cancelled"].map((status) => (
+            {["all", ...ORDER_STEPS, "cancelled"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
-                  filterStatus === status
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border capitalize ${filterStatus === status
                     ? "bg-gray-900 text-white border-gray-900"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {status}
               </button>
@@ -243,7 +242,7 @@ const AdminOrders: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${getStatusColor(
                             order.status
                           )}`}
                         >
@@ -324,7 +323,7 @@ const AdminOrders: React.FC = () => {
                   <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">
                     Order Progress
                   </h4>
-                  {selectedOrder.status === "Cancelled" ? (
+                  {selectedOrder.status === "cancelled" ? (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700">
                       <AlertTriangle size={24} />
                       <div>
@@ -349,11 +348,10 @@ const AdminOrders: React.FC = () => {
                             <div
                               key={step}
                               style={{ width: "25%" }}
-                              className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${
-                                isCompleted
+                              className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${isCompleted
                                   ? "bg-primary-500"
                                   : "bg-transparent"
-                              }`}
+                                }`}
                             ></div>
                           );
                         })}
@@ -370,15 +368,14 @@ const AdminOrders: React.FC = () => {
                           return (
                             <div
                               key={step}
-                              className={`text-center w-1/4 ${
-                                isActive
+                              className={`text-center w-1/4 ${isActive
                                   ? "text-primary-600 font-bold"
                                   : isCompleted
-                                  ? "text-gray-900"
-                                  : "text-gray-400"
-                              }`}
+                                    ? "text-gray-900"
+                                    : "text-gray-400"
+                                }`}
                             >
-                              {step}
+                              {step.charAt(0).toUpperCase() + step.slice(1)}
                             </div>
                           );
                         })}
@@ -486,7 +483,7 @@ const AdminOrders: React.FC = () => {
                             selectedOrder.status
                           )}`}
                         >
-                          Current Status: {selectedOrder.status}
+                          Current Status: <span className="capitalize">{selectedOrder.status}</span>
                         </span>
                       </div>
 
@@ -511,11 +508,11 @@ const AdminOrders: React.FC = () => {
 
                         {getAllowedActions(selectedOrder.status).length ===
                           0 && (
-                          <div className="text-center text-gray-500 py-4">
-                            <Check className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                            <p>No further actions available for this order.</p>
-                          </div>
-                        )}
+                            <div className="text-center text-gray-500 py-4">
+                              <Check className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                              <p>No further actions available for this order.</p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
