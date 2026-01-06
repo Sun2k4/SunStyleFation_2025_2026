@@ -1,5 +1,4 @@
-import { supabase, isSupabaseConfigured } from "./supabaseClient";
-import { mockDb } from "./mockDb";
+import { supabase } from "./supabaseClient";
 
 export interface DashboardStats {
   totalRevenue: number;
@@ -16,20 +15,6 @@ export interface ChartData {
 
 export const dashboardService = {
   getDashboardStats: async (): Promise<DashboardStats> => {
-    if (!isSupabaseConfigured()) {
-      // Mock Data Calculation
-      const orders = mockDb.orders.getAll();
-      const products = mockDb.products.getAll(); // Using products count as proxy for users in mock mode just to show something different, or use hardcoded
-
-      const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-      return {
-        totalRevenue,
-        totalOrders: orders.length,
-        totalUsers: 125, // Mock users
-        revenueGrowth: 12.5,
-      };
-    }
-
     try {
       // 1. Fetch Orders for Revenue and Count
       const { data: orders, error: orderError } = await supabase
@@ -68,18 +53,6 @@ export const dashboardService = {
   },
 
   getChartData: async (): Promise<ChartData[]> => {
-    if (!isSupabaseConfigured()) {
-      return [
-        { name: "Jan", sales: 4000, users: 240 },
-        { name: "Feb", sales: 3000, users: 139 },
-        { name: "Mar", sales: 2000, users: 980 },
-        { name: "Apr", sales: 2780, users: 390 },
-        { name: "May", sales: 1890, users: 480 },
-        { name: "Jun", sales: 2390, users: 380 },
-        { name: "Jul", sales: 3490, users: 430 },
-      ];
-    }
-
     try {
       // Fetch data created in the current year to categorize by month
       // For simplicity in this demo, we fetch all and process in JS

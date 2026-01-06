@@ -1,6 +1,5 @@
 import { Product } from "../types";
-import { supabase, isSupabaseConfigured } from "./supabaseClient";
-import { mockDb } from "./mockDb";
+import { supabase } from "./supabaseClient";
 
 // Helper to map DB row to Frontend Product type
 const mapDbToProduct = (row: any): Product => ({
@@ -29,8 +28,6 @@ const mapDbToProduct = (row: any): Product => ({
 
 export const productService = {
   getAllProducts: async (): Promise<Product[]> => {
-    if (!isSupabaseConfigured()) return mockDb.products.getAll();
-
     const { data, error } = await supabase
       .from("products")
       .select(`
@@ -48,8 +45,6 @@ export const productService = {
 
   // New Arrivals - products ordered by created_at desc, limit 8
   getNewArrivals: async (limit: number = 8): Promise<Product[]> => {
-    if (!isSupabaseConfigured()) return mockDb.products.getAll().slice(0, limit);
-
     const { data, error } = await supabase
       .from("products")
       .select(`
@@ -69,8 +64,6 @@ export const productService = {
 
   // Best Sellers - products with high rating (simulated, no sold_count)
   getBestSellers: async (limit: number = 8): Promise<Product[]> => {
-    if (!isSupabaseConfigured()) return mockDb.products.getAll().slice(0, limit);
-
     const { data, error } = await supabase
       .from("products")
       .select(`
@@ -89,9 +82,6 @@ export const productService = {
   },
 
   getProductById: async (id: number): Promise<Product | undefined> => {
-    if (!isSupabaseConfigured())
-      return mockDb.products.getAll().find((p) => p.id === id);
-
     const { data, error } = await supabase
       .from("products")
       .select(`
@@ -111,10 +101,6 @@ export const productService = {
   },
 
   getProductBySlug: async (slug: string): Promise<Product | undefined> => {
-    // Note: If your DB doesn't have a slug column yet, this might fail or need fallback logic
-    if (!isSupabaseConfigured())
-      return mockDb.products.getAll().find((p) => p.slug === slug);
-
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -125,18 +111,7 @@ export const productService = {
     return mapDbToProduct(data);
   },
 
-  createProduct: async (product: Omit<Product, "id">): Promise<Product> => {
-    if (!isSupabaseConfigured()) {
-      const newProduct = {
-        ...product,
-        id: Date.now(),
-        rating: 0,
-        reviews: 0,
-        stock: product.stock || 0,
-      };
-      return mockDb.products.add(newProduct);
-    }
-
+  createProduct: async (product: Omit<Product, "id" | "created_at">): Promise<Product> => {
     const dbPayload = {
       name: product.name,
       category_id: product.category_id, // Use category_id instead of category
@@ -164,8 +139,6 @@ export const productService = {
     id: number,
     updates: Partial<Product>
   ): Promise<Product | null> => {
-    if (!isSupabaseConfigured()) return mockDb.products.update(id, updates);
-
     const dbUpdates: any = {};
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.category_id !== undefined) dbUpdates.category_id = updates.category_id;
@@ -187,16 +160,10 @@ export const productService = {
   },
 
   deleteProduct: async (id: number): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      mockDb.products.delete(id);
-      return;
-    }
     await supabase.from("products").delete().eq("id", id);
   },
 
   uploadImage: async (file: File): Promise<string> => {
-    if (!isSupabaseConfigured()) return URL.createObjectURL(file);
-
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}_${Math.random()
       .toString(36)

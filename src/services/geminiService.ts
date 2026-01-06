@@ -1,19 +1,22 @@
 import { GoogleGenAI, Chat } from "@google/genai";
-import { mockDb } from "./mockDb";
+import { productService } from "./productService";
 
-export const createStylistChat = (): Chat => {
-  const apiKey = process.env.API_KEY;
+export const createStylistChat = async (): Promise<Chat> => {
+  const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY; // Support both just in case
 
   if (!apiKey) {
     throw new Error("Gemini API Key is missing.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const products = mockDb.products.getAll();
+
+  // Fetch real products from Supabase via productService
+  const products = await productService.getAllProducts();
+
   const productContext = products
     .map(
       (p) =>
-        `- ${p.name} (ID: ${p.id}): Category ${p.category}, Price $${p.price}. ${p.description}`
+        `- ${p.name} (ID: ${p.id}): Category ${p.categoryName || 'General'}, Price $${p.price}. ${p.description || ''}`
     )
     .join("\n");
 

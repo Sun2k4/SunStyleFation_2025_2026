@@ -1,6 +1,5 @@
 import { Category } from "../types";
-import { mockDb } from "./mockDb";
-import { isSupabaseConfigured, supabase } from "./supabaseClient";
+import { supabase } from "./supabaseClient";
 
 // Helper to map DB row to Frontend Category type
 const mapDbToCategory = (row: any): Category => ({
@@ -14,17 +13,6 @@ const mapDbToCategory = (row: any): Category => ({
 
 export const categoryService = {
     getAllCategories: async (): Promise<Category[]> => {
-        if (!isSupabaseConfigured()) {
-            // In mock mode, we calculate product count manually
-            const categories = mockDb.categories.getAll();
-            const products = mockDb.products.getAll();
-
-            return categories.map((cat: any) => ({
-                ...cat,
-                productCount: products.filter(p => p.categoryName === cat.name).length
-            }));
-        }
-
         const { data: categories, error } = await supabase
             .from("categories")
             .select("*")
@@ -63,10 +51,6 @@ export const categoryService = {
     },
 
     createCategory: async (category: Omit<Category, "id" | "productCount">): Promise<Category> => {
-        if (!isSupabaseConfigured()) {
-            return mockDb.categories.add(category);
-        }
-
         const { data, error } = await supabase
             .from("categories")
             .insert([category])
@@ -78,10 +62,6 @@ export const categoryService = {
     },
 
     updateCategory: async (id: number, updates: Partial<Category>): Promise<Category | null> => {
-        if (!isSupabaseConfigured()) {
-            return mockDb.categories.update(id, updates);
-        }
-
         const { data, error } = await supabase
             .from("categories")
             .update(updates)
@@ -94,10 +74,6 @@ export const categoryService = {
     },
 
     deleteCategory: async (id: number): Promise<void> => {
-        if (!isSupabaseConfigured()) {
-            mockDb.categories.delete(id);
-            return;
-        }
         const { error } = await supabase.from("categories").delete().eq("id", id);
 
         if (error) {

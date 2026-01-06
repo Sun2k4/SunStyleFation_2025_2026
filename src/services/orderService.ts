@@ -1,12 +1,9 @@
 import { Order, CartItem, Address } from "../types";
-import { supabase, isSupabaseConfigured } from "./supabaseClient";
-import { mockDb } from "./mockDb";
+import { supabase } from "./supabaseClient";
 
 export const orderService = {
   // ADMIN: Get all orders with user details
   getAllOrders: async (): Promise<Order[]> => {
-    if (!isSupabaseConfigured()) return mockDb.orders.getAll();
-
     const { data, error } = await supabase
       .from("orders")
       .select(
@@ -74,17 +71,6 @@ export const orderService = {
 
   // ADMIN: Update order status
   updateOrderStatus: async (orderId: number, status: string): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-      // Mock update
-      const orders = mockDb.orders.getAll();
-      const order = orders.find((o) => o.id === orderId);
-      if (order) {
-        order.status = status as any;
-        mockDb.orders.save(orders);
-      }
-      return;
-    }
-
     const { error } = await supabase
       .from("orders")
       .update({ status })
@@ -98,9 +84,6 @@ export const orderService = {
 
   // USER: Fetch orders for a specific user
   getUserOrders: async (userId: string): Promise<Order[]> => {
-    if (!isSupabaseConfigured())
-      return mockDb.orders.getAll().filter((o) => o.userId === userId);
-
     const { data, error } = await supabase
       .from("orders")
       .select(
@@ -160,19 +143,8 @@ export const orderService = {
 
   // USER: Cancel their own pending order
   cancelOrder: async (orderId: number): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      const orders = mockDb.orders.getAll();
-      const order = orders.find((o) => o.id === orderId);
-      if (order && order.status === "pending") {
-        order.status = "cancelled";
-        mockDb.orders.save(orders);
-        return true;
-      }
-      return false;
-    }
-
     // Policy "Users can cancel own pending orders" enforced by RLS
-    // We explicitly check status='Pending' in the query for extra safety/clarity
+    // We explicitly check status='pending' in the query for extra safety/clarity
     const { error, data } = await supabase
       .from("orders")
       .update({ status: "cancelled" })
@@ -194,7 +166,6 @@ export const orderService = {
     userId: string,
     address: Omit<Address, "id" | "user_id">
   ) => {
-    if (!isSupabaseConfigured()) return;
     const { error } = await supabase.from("user_addresses").insert([
       {
         user_id: userId,
@@ -212,23 +183,6 @@ export const orderService = {
     total: number,
     address?: any
   ): Promise<Order | null> => {
-    if (!isSupabaseConfigured()) {
-      const mockOrder = {
-        id: Math.floor(Math.random() * 10000),
-        userId,
-        date: new Date().toISOString(),
-        total,
-        total_amount: total,
-        status: "pending",
-        items,
-        payment_method: "credit_card",
-        shipping_address_id: null,
-        tracking_number: null,
-        notes: null,
-      } as unknown as Order;
-      return mockDb.orders.add(mockOrder);
-    }
-
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert([
@@ -273,6 +227,7 @@ export const orderService = {
     // 4. Update Stock (Decrement quantity)
     // Run sequentially to avoid race conditions or use RPC
     for (const item of orderItems) {
+      console.log('Using RPC to decrement stock for:', item.variant_id);
       if (item.variant_id) {
         const { error: stockError } = await supabase.rpc('decrement_stock', {
           p_variant_id: item.variant_id,
@@ -282,6 +237,8 @@ export const orderService = {
         if (stockError) {
           console.error(`Failed to decrement stock for variant ${item.variant_id}:`, stockError);
           // Optional: We could rollback here, but for now just log it
+        } else {
+          console.log(`Successfully decremented stock for variant ${item.variant_id}`);
         }
       }
     }

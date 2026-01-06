@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase } from './supabaseClient';
 import { CartItem } from '../types';
 
 export const cartService = {
@@ -7,11 +7,6 @@ export const cartService = {
      * CRITICAL: Uses variant_id to track size/color selection
      */
     addToCart: async (userId: string, variantId: number, quantity: number = 1): Promise<void> => {
-        if (!isSupabaseConfigured()) {
-            console.warn('Supabase not configured, cart changes not persisted');
-            return;
-        }
-
         // Check if item already exists in cart
         const { data: existing } = await supabase
             .from('cart_items')
@@ -52,8 +47,6 @@ export const cartService = {
      * Get all cart items for a user with nested product and variant data
      */
     getCartItems: async (userId: string): Promise<CartItem[]> => {
-        if (!isSupabaseConfigured()) return [];
-
         const { data, error } = await supabase
             .from('cart_items')
             .select(`
@@ -93,8 +86,6 @@ export const cartService = {
      * Update quantity of a cart item
      */
     updateQuantity: async (cartItemId: number, quantity: number): Promise<void> => {
-        if (!isSupabaseConfigured()) return;
-
         if (quantity < 1) {
             throw new Error('Quantity must be at least 1');
         }
@@ -114,8 +105,6 @@ export const cartService = {
      * Remove item from cart
      */
     removeItem: async (cartItemId: number): Promise<void> => {
-        if (!isSupabaseConfigured()) return;
-
         const { error } = await supabase
             .from('cart_items')
             .delete()
@@ -131,8 +120,6 @@ export const cartService = {
      * Clear all cart items for a user
      */
     clearCart: async (userId: string): Promise<void> => {
-        if (!isSupabaseConfigured()) return;
-
         const { error } = await supabase
             .from('cart_items')
             .delete()
