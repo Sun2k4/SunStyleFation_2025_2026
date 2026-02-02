@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 
 interface Testimonial {
@@ -46,6 +47,7 @@ const TESTIMONIALS: Testimonial[] = [
 ];
 
 const Testimonials: React.FC = () => {
+    const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const next = () => {
@@ -63,8 +65,8 @@ const Testimonials: React.FC = () => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">What Our Customers Say</h2>
-                    <p className="text-gray-500">Join thousands of happy shoppers</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('testimonials.title')}</h2>
+                    <p className="text-gray-500">{t('testimonials.subtitle')}</p>
                 </div>
 
                 {/* Testimonial Card */}

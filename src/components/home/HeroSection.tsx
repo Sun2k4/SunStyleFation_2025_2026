@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Play, Pause } from 'lucide-react';
 
 interface CountdownProps {
@@ -7,6 +8,7 @@ interface CountdownProps {
 }
 
 const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
+    const { t } = useTranslation();
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
@@ -30,10 +32,10 @@ const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
     return (
         <div className="flex gap-3">
             {[
-                { value: timeLeft.days, label: 'Days' },
-                { value: timeLeft.hours, label: 'Hours' },
-                { value: timeLeft.minutes, label: 'Mins' },
-                { value: timeLeft.seconds, label: 'Secs' },
+                { value: timeLeft.days, label: t('hero.days') },
+                { value: timeLeft.hours, label: t('hero.hours') },
+                { value: timeLeft.minutes, label: t('hero.mins') },
+                { value: timeLeft.seconds, label: t('hero.secs') },
             ].map((item, index) => (
                 <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[60px] text-center">
                     <div className="text-2xl font-bold text-white">{String(item.value).padStart(2, '0')}</div>
@@ -45,6 +47,7 @@ const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
 };
 
 const HeroSection: React.FC = () => {
+    const { t } = useTranslation();
     const [isVideoPlaying, setIsVideoPlaying] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -105,28 +108,28 @@ const HeroSection: React.FC = () => {
                 <div className="mb-8 animate-fade-in">
                     <div className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
                         <span className="animate-pulse">🔥</span>
-                        <span>Summer Sale - Up to 50% OFF</span>
+                        <span>{t('hero.saleBanner')}</span>
                     </div>
                 </div>
 
                 {/* Main Content */}
                 <div className="max-w-2xl">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-6 animate-slide-up">
-                        Embrace the{' '}
+                        {t('hero.title1')}{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-300">
                             SunStyle
                         </span>
                         <br />
-                        Summer 2024
+                        {t('hero.title2')}
                     </h1>
 
                     <p className="text-lg sm:text-xl text-gray-200 mb-8 leading-relaxed animate-slide-up animation-delay-200">
-                        Discover lightweight fabrics, vibrant colors, and styles designed to keep you cool and chic under the sun.
+                        {t('hero.subtitle')}
                     </p>
 
                     {/* Countdown */}
                     <div className="mb-8 animate-slide-up animation-delay-300">
-                        <p className="text-white/80 text-sm mb-3 uppercase tracking-wider">Sale ends in:</p>
+                        <p className="text-white/80 text-sm mb-3 uppercase tracking-wider">{t('hero.saleEnds')}</p>
                         <Countdown targetDate={saleEndDate} />
                     </div>
 
@@ -136,14 +139,14 @@ const HeroSection: React.FC = () => {
                             to="/shop"
                             className="group bg-white text-gray-900 px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center gap-2"
                         >
-                            Shop Now
+                            {t('hero.shopNow')}
                             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
                             to="/shop?category=new"
                             className="bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white px-8 py-4 rounded-full font-bold text-lg transition-all inline-flex items-center justify-center"
                         >
-                            New Arrivals
+                            {t('hero.newArrivals')}
                         </Link>
                     </div>
                 </div>
@@ -160,3 +163,4 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
+

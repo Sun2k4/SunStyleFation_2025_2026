@@ -2,7 +2,7 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { productService } from "./productService";
 
 export const createStylistChat = async (): Promise<Chat> => {
-  const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY; // Support both just in case
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error("Gemini API Key is missing.");

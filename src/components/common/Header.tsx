@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ShoppingCart,
   Menu,
@@ -10,8 +11,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header: React.FC = () => {
+  const { t } = useTranslation();
   const { user, logout, isAdmin } = useAuth();
   const { cartCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,26 +44,29 @@ const Header: React.FC = () => {
                 to="/"
                 className="text-gray-900 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Home
+                {t('nav.home')}
               </Link>
               <Link
                 to="/shop"
                 className="text-gray-500 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Shop
+                {t('nav.shop')}
               </Link>
               {isAdmin && (
                 <Link
                   to="/admin"
                   className="text-primary-600 hover:text-primary-700 px-3 py-2 rounded-md text-sm font-medium bg-primary-50 transition-colors"
                 >
-                  Admin Dashboard
+                  {t('nav.admin')}
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             <Link
               to="/cart"
               className="p-2 text-gray-400 hover:text-primary-600 relative transition-colors"
@@ -102,13 +108,13 @@ const Header: React.FC = () => {
                   to="/login"
                   className="text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
                 >
-                  Sign in
+                  {t('nav.signIn')}
                 </Link>
                 <Link
                   to="/login"
                   className="text-sm font-medium bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors"
                 >
-                  Register
+                  {t('nav.register')}
                 </Link>
               </div>
             )}
@@ -133,14 +139,14 @@ const Header: React.FC = () => {
               onClick={() => setIsMenuOpen(false)}
               className="text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
             >
-              Home
+              {t('nav.home')}
             </Link>
             <Link
               to="/shop"
               onClick={() => setIsMenuOpen(false)}
               className="text-gray-500 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
             >
-              Shop
+              {t('nav.shop')}
             </Link>
             {isAdmin && (
               <Link
@@ -148,7 +154,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className="text-primary-600 hover:bg-primary-50 block px-3 py-2 rounded-md text-base font-medium"
               >
-                Admin Dashboard
+                {t('nav.admin')}
               </Link>
             )}
             {user && (
@@ -157,7 +163,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className="text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium"
               >
-                My Profile
+                {t('nav.profile')}
               </Link>
             )}
           </div>
@@ -193,7 +199,7 @@ const Header: React.FC = () => {
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                 >
-                  Sign in
+                  {t('nav.signIn')}
                 </Link>
               </div>
             )}

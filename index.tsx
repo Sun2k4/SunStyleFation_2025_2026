@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./src/i18n"; // Initialize i18n
 import App from "./src/App";
 
 const rootElement = document.getElementById("root");

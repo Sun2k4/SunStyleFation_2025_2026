@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const Cart: React.FC = () => {
+  const { t } = useTranslation();
   const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const FREE_SHIPPING_THRESHOLD = 500;
   const progress = Math.min((cartTotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
@@ -14,10 +16,10 @@ const Cart: React.FC = () => {
         <div className="bg-gray-50 p-6 rounded-full mb-6">
           <ShoppingBag className="w-16 h-16 text-gray-300" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-        <p className="text-gray-500 mb-8 max-w-sm text-center">It looks like you haven't discovered our latest collection yet.</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('cart.empty')}</h2>
+        <p className="text-gray-500 mb-8 max-w-sm text-center">{t('cart.emptyDesc')}</p>
         <Link to="/shop" className="bg-gray-900 text-white px-10 py-4 rounded-full font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
-          Start Shopping
+          {t('cart.startShopping')}
         </Link>
       </div>
     );
@@ -26,8 +28,8 @@ const Cart: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Shopping Cart</h1>
-        <span className="text-gray-500 font-medium">{cart.reduce((acc, item) => acc + item.quantity, 0)} items</span>
+        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t('cart.title')}</h1>
+        <span className="text-gray-500 font-medium">{cart.reduce((acc, item) => acc + item.quantity, 0)} {t('cart.items')}</span>
       </div>
 
       <div className="lg:grid lg:grid-cols-12 lg:gap-12 relative">
@@ -38,7 +40,7 @@ const Cart: React.FC = () => {
               <div className="flex items-center gap-3 mb-3">
                 <Truck className={`w-5 h-5 ${progress === 100 ? 'text-green-500' : 'text-gray-900'}`} />
                 <span className="font-bold text-gray-900">
-                  {progress === 100 ? 'You have unlocked Free Shipping!' : `Add $${(FREE_SHIPPING_THRESHOLD - cartTotal).toFixed(2)} more for Free Shipping`}
+                  {progress === 100 ? t('cart.freeShippingUnlocked') : t('cart.addMore', { amount: (FREE_SHIPPING_THRESHOLD - cartTotal).toFixed(2) })}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -104,7 +106,7 @@ const Cart: React.FC = () => {
                         className="group/delete flex items-center gap-2 text-gray-400 hover:text-red-500 font-medium transition-colors p-2 rounded-lg hover:bg-red-50"
                       >
                         <Trash2 size={18} className="group-hover/delete:animate-bounce" />
-                        <span className="hidden sm:inline">Remove</span>
+                        <span className="hidden sm:inline">{t('cart.remove')}</span>
                       </button>
                     </div>
                   </div>
@@ -115,36 +117,36 @@ const Cart: React.FC = () => {
 
           <div className="mt-8 flex justify-between items-center">
             <Link to="/shop" className="text-gray-900 font-bold hover:underline flex items-center gap-2">
-              <ArrowLeft size={18} /> Continue Shopping
+              <ArrowLeft size={18} /> {t('cart.continueShopping')}
             </Link>
             <button
               onClick={clearCart}
               className="text-red-500 hover:text-red-600 text-sm font-medium hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
             >
-              Clear Cart
+              {t('cart.clearCart')}
             </button>
           </div>
         </div>
 
         <div className="lg:col-span-4 mt-12 lg:mt-0">
           <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 p-8 sticky top-32">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-8">Order Summary</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-8">{t('cart.orderSummary')}</h2>
 
             <div className="space-y-4 mb-8">
               <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
+                <span>{t('cart.subtotal')}</span>
                 <span className="font-medium">${cartTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span className="text-green-600 font-bold">{cartTotal >= FREE_SHIPPING_THRESHOLD ? 'Free' : '$0.00'}</span>
+                <span>{t('cart.shipping')}</span>
+                <span className="text-green-600 font-bold">{cartTotal >= FREE_SHIPPING_THRESHOLD ? t('cart.free') : '$0.00'}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Tax</span>
+                <span>{t('cart.tax')}</span>
                 <span className="font-medium">${(cartTotal * 0.08).toFixed(2)}</span>
               </div>
               <div className="border-t border-dashed border-gray-200 pt-6 flex justify-between items-end">
-                <span className="text-gray-900 font-bold text-lg">Total</span>
+                <span className="text-gray-900 font-bold text-lg">{t('cart.total')}</span>
                 <span className="text-4xl font-extrabold text-gray-900">${(cartTotal * 1.08).toFixed(2)}</span>
               </div>
             </div>
@@ -152,18 +154,18 @@ const Cart: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
                 <ShieldCheck className="w-4 h-4 text-gray-400" />
-                Secure Checkout - SSL Encrypted
+                {t('cart.secureCheckout')}
               </div>
               <Link
                 to="/checkout"
                 className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-all transform hover:scale-[1.02] shadow-xl shadow-gray-900/20 text-lg"
               >
-                Checkout <ArrowRight size={20} />
+                {t('cart.checkout')} <ArrowRight size={20} />
               </Link>
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-              <p className="text-gray-400 text-sm">We accept</p>
+              <p className="text-gray-400 text-sm">{t('cart.weAccept')}</p>
               <div className="flex justify-center gap-3 mt-3 opacity-60 grayscale hover:grayscale-0 transition-all">
                 <div className="h-6 w-10 bg-gray-200 rounded"></div>
                 <div className="h-6 w-10 bg-gray-200 rounded"></div>

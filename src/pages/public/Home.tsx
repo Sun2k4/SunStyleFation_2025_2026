@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Truck, Shield, Clock, Sparkles } from 'lucide-react';
 import { Product } from '../../types';
 import { productService } from '../../services/productService';
@@ -13,6 +14,7 @@ import {
 } from '../../components/home';
 
 const Home: React.FC = () => {
+  const { t } = useTranslation();
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +50,8 @@ const Home: React.FC = () => {
               <Truck size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Free Shipping</h3>
-              <p className="text-sm text-gray-500">On all orders over $100</p>
+              <h3 className="font-bold text-gray-900">{t('home.freeShipping')}</h3>
+              <p className="text-sm text-gray-500">{t('home.freeShippingDesc')}</p>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-100 transition-all">
@@ -57,8 +59,8 @@ const Home: React.FC = () => {
               <Shield size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Secure Payment</h3>
-              <p className="text-sm text-gray-500">100% secure transaction</p>
+              <h3 className="font-bold text-gray-900">{t('home.securePayment')}</h3>
+              <p className="text-sm text-gray-500">{t('home.securePaymentDesc')}</p>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-100 transition-all">
@@ -66,8 +68,8 @@ const Home: React.FC = () => {
               <Clock size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">24/7 Support</h3>
-              <p className="text-sm text-gray-500">Dedicated support team</p>
+              <h3 className="font-bold text-gray-900">{t('home.support')}</h3>
+              <p className="text-sm text-gray-500">{t('home.supportDesc')}</p>
             </div>
           </div>
         </div>
@@ -78,8 +80,8 @@ const Home: React.FC = () => {
 
       {/* New Arrivals Carousel */}
       <ProductCarousel
-        title="New Arrivals"
-        subtitle="Fresh drops just for you"
+        title={t('home.newArrivals')}
+        subtitle={t('home.freshDrops')}
         products={newArrivals}
         loading={loading}
         viewAllLink="/shop?sort=newest"
@@ -88,8 +90,8 @@ const Home: React.FC = () => {
       {/* Best Sellers / Trending */}
       <section className="bg-gray-50 py-4">
         <ProductCarousel
-          title="Trending Now"
-          subtitle="Hot picks this season"
+          title={t('home.trending')}
+          subtitle={t('home.hotPicks')}
           products={bestSellers}
           loading={loading}
           viewAllLink="/shop?sort=popular"
@@ -103,18 +105,18 @@ const Home: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 bg-gray-800 rounded-full px-4 py-1.5 mb-6 border border-gray-700">
                 <Sparkles size={16} className="text-primary-400" />
-                <span className="text-xs font-bold tracking-wider uppercase text-gray-300">Powered by Gemini AI</span>
+                <span className="text-xs font-bold tracking-wider uppercase text-gray-300">{t('ai.poweredBy')}</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
-                Meet Sunny,<br />
-                Your Personal <span className="text-primary-400">AI Stylist</span>
+                {t('ai.title').split(',')[0]},<br />
+                <span className="text-primary-400">{t('ai.title').split(',')[1] || 'AI Stylist'}</span>
               </h2>
               <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-lg">
-                Not sure what to wear? Chat with Sunny anytime! Click the{' '}
+                {t('ai.chatPrompt')}{' '}
                 <span className="text-white font-bold inline-flex items-center gap-1 bg-primary-600 px-2 py-0.5 rounded-lg mx-1 text-sm">
-                  <Sparkles size={12} />chat icon
+                  <Sparkles size={12} />{t('ai.chatIcon')}
                 </span>{' '}
-                in the bottom right corner to get instant, personalized outfit recommendations.
+                {t('ai.chatPromptEnd')}
               </p>
 
               <div className="flex flex-wrap gap-4">
@@ -125,8 +127,8 @@ const Home: React.FC = () => {
                   <div className="w-10 h-10 rounded-full border-2 border-gray-900 bg-gray-800 text-xs flex items-center justify-center font-bold">+2k</div>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <div className="text-sm font-bold">Happy Shoppers</div>
-                  <div className="text-xs text-gray-500">using AI recommendations</div>
+                  <div className="text-sm font-bold">{t('ai.happyShoppers')}</div>
+                  <div className="text-xs text-gray-500">{t('ai.usingAI')}</div>
                 </div>
               </div>
             </div>

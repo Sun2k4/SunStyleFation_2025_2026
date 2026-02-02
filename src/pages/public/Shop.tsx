@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../../components/user/ProductCard';
 import SkeletonProductCard from '../../components/common/SkeletonProductCard';
@@ -10,6 +11,7 @@ import { Product, Category } from '../../types';
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const Shop: React.FC = () => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -110,12 +112,12 @@ const Shop: React.FC = () => {
       {/* Header & Filter */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Shop Collection</h1>
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t('shop.title')}</h1>
           <p className="text-gray-500 mt-2 text-lg min-h-[1.75rem]">
             {isLoading ? (
               <span className="inline-block w-32 h-6 bg-gray-200 rounded animate-pulse"></span>
             ) : (
-              `Showing ${filteredProducts.length} premium items`
+              t('shop.showing', { count: filteredProducts.length })
             )}
           </p>
         </div>
@@ -125,7 +127,7 @@ const Shop: React.FC = () => {
             <Search className="absolute left-4 top-3.5 text-gray-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t('shop.search')}
               className="pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none w-full bg-gray-50 focus:bg-white transition-all shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -143,7 +145,7 @@ const Shop: React.FC = () => {
             : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
             }`}
         >
-          All
+          {t('shop.all')}
         </button>
         {categories.map(category => (
           <button
@@ -215,9 +217,9 @@ const Shop: React.FC = () => {
           <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-sm">
             <SlidersHorizontal className="text-gray-400 w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No products found</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('shop.noProducts')}</h3>
           <p className="text-gray-500 max-w-sm mx-auto">
-            We couldn't find any items matching your criteria. Try adjusting your search or category.
+            {t('shop.noProductsDesc')}
           </p>
         </div>
       )}

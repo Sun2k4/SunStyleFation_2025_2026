@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail, Send, CheckCircle } from 'lucide-react';
 
 const Newsletter: React.FC = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -35,17 +37,17 @@ const Newsletter: React.FC = () => {
 
                     {/* Text */}
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Stay in the Loop
+                        {t('newsletter.title')}
                     </h2>
                     <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-                        Subscribe to get exclusive offers, style tips, and early access to new arrivals. No spam, we promise!
+                        {t('newsletter.subtitle')}
                     </p>
 
                     {/* Form */}
                     {isSubmitted ? (
                         <div className="flex items-center justify-center gap-3 text-green-400 animate-fade-in">
                             <CheckCircle size={24} />
-                            <span className="text-lg font-medium">Thank you for subscribing! 🎉</span>
+                            <span className="text-lg font-medium">{t('newsletter.success')} 🎉</span>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
@@ -54,7 +56,7 @@ const Newsletter: React.FC = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
+                                    placeholder={t('newsletter.placeholder')}
                                     className="w-full px-6 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                     required
                                 />
@@ -68,7 +70,7 @@ const Newsletter: React.FC = () => {
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        Subscribe
+                                        {t('newsletter.subscribe')}
                                         <Send size={18} className="group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -78,7 +80,7 @@ const Newsletter: React.FC = () => {
 
                     {/* Trust Badge */}
                     <p className="text-gray-500 text-sm mt-6">
-                        🔒 Your email is safe with us. Unsubscribe anytime.
+                        🔒 {t('newsletter.privacy')}
                     </p>
                 </div>
             </div>
