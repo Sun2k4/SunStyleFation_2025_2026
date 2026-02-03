@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { formatPrice } from '../../utils/currency';
 
 const Cart: React.FC = () => {
   const { t } = useTranslation();
@@ -79,7 +80,7 @@ const Cart: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <p className="font-bold text-xl text-gray-900">${(finalPrice * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-xl text-gray-900">{formatPrice(finalPrice * item.quantity)}</p>
                     </div>
 
                     <div className="mt-auto flex justify-between items-center">
@@ -135,7 +136,7 @@ const Cart: React.FC = () => {
             <div className="space-y-4 mb-8">
               <div className="flex justify-between text-gray-600">
                 <span>{t('cart.subtotal')}</span>
-                <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(cartTotal)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>{t('cart.shipping')}</span>
@@ -143,11 +144,11 @@ const Cart: React.FC = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>{t('cart.tax')}</span>
-                <span className="font-medium">${(cartTotal * 0.08).toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(cartTotal * 0.08)}</span>
               </div>
               <div className="border-t border-dashed border-gray-200 pt-6 flex justify-between items-end">
                 <span className="text-gray-900 font-bold text-lg">{t('cart.total')}</span>
-                <span className="text-4xl font-extrabold text-gray-900">${(cartTotal * 1.08).toFixed(2)}</span>
+                <span className="text-4xl font-extrabold text-gray-900">{formatPrice(cartTotal * 1.08)}</span>
               </div>
             </div>
 

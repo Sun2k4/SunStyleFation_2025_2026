@@ -8,7 +8,10 @@ import Shop from "../pages/public/Shop";
 import ProductDetail from "../pages/public/ProductDetail";
 import Cart from "../pages/public/Cart";
 import Checkout from "../pages/public/Checkout";
+import PaymentSuccess from "../pages/public/PaymentSuccess";
+import PaymentCancel from "../pages/public/PaymentCancel";
 import UserProfile from "../pages/public/UserProfile";
+import Wishlist from "../pages/public/Wishlist";
 import UserLogin from "../pages/auth/UserLogin";
 import AdminLogin from "../pages/auth/AdminLogin";
 import Dashboard from "../pages/admin/Dashboard/index";
@@ -36,6 +39,14 @@ export const AppRoutes: React.FC = () => {
         element={
           <MainLayout>
             <Shop />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/wishlist"
+        element={
+          <MainLayout>
+            <Wishlist />
           </MainLayout>
         }
       />
@@ -75,6 +86,24 @@ export const AppRoutes: React.FC = () => {
               <UserProfile />
             </MainLayout>
           </ProtectedRoute>
+        }
+      />
+
+      {/* Payment Routes */}
+      <Route
+        path="/payment/success"
+        element={
+          <MainLayout>
+            <PaymentSuccess />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/payment/cancel"
+        element={
+          <MainLayout>
+            <PaymentCancel />
+          </MainLayout>
         }
       />
 

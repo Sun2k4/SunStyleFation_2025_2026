@@ -11,9 +11,11 @@ import {
   Truck,
   RotateCcw,
 } from "lucide-react";
+import { message } from "antd";
 import { useCart } from "../../context/CartContext";
 import { productService } from "../../services/productService";
 import { Product } from "../../types";
+import { formatPrice } from "../../utils/currency";
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -138,7 +140,7 @@ const ProductDetail: React.FC = () => {
           <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
             <div className="flex items-end gap-3">
               <p className="text-4xl font-bold text-gray-900">
-                ${product.price.toFixed(2)}
+                {formatPrice(product.price)}
               </p>
               {/* Simulated discount for visual appeal if needed later */}
             </div>
@@ -248,16 +250,15 @@ const ProductDetail: React.FC = () => {
                   if (selectedVariant) {
                     // Use actual variant from database
                     await addToCart(selectedVariant.id);
-                    alert(`Added ${product.name} (${selectedSize}, ${selectedColor}) to cart!`);
+                    message.success(`Đã thêm ${product.name} (${selectedSize}, ${selectedColor}) vào giỏ hàng!`);
                   } else {
                     // Fallback: No variants in database yet
-                    // This happens if products were created before variant system
-                    alert('⚠️ This product doesn\'t have size/color variants yet. Please contact admin to add variants.');
+                    message.warning('Sản phẩm chưa có biến thể size/màu. Vui lòng liên hệ admin.');
                     console.warn('Product has no variants:', product.id);
                   }
                 } catch (error) {
                   console.error('Error adding to cart:', error);
-                  alert('Failed to add to cart. Please try again.');
+                  message.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
                 } finally {
                   setAddingToCart(false);
                 }

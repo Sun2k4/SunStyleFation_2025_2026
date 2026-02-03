@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ShoppingCart,
+  Heart,
   Menu,
   X,
   LogOut,
@@ -11,12 +12,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isAdmin } = useAuth();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -67,6 +70,21 @@ const Header: React.FC = () => {
             {/* Language Switcher */}
             <LanguageSwitcher />
 
+            {/* Wishlist */}
+            <Link
+              to="/wishlist"
+              className="p-2 text-gray-400 hover:text-red-500 relative transition-colors"
+              title="Yêu thích"
+            >
+              <Heart size={24} />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart */}
             <Link
               to="/cart"
               className="p-2 text-gray-400 hover:text-primary-600 relative transition-colors"

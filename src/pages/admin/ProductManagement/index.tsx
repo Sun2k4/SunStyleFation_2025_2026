@@ -16,6 +16,7 @@ import { productService } from "../../../services/productService";
 import { categoryService } from "../../../services/categoryService";
 import { Product, Category } from "../../../types";
 import VariantModal from "../../../components/admin/VariantModal";
+import { formatPrice } from "../../../utils/currency";
 
 const AdminProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -150,7 +151,13 @@ const AdminProducts: React.FC = () => {
 
     try {
       if (!formData.name || !formData.price) {
-        alert("Name and Price are required");
+        message.warning("Tên sản phẩm và Giá là bắt buộc");
+        return;
+      }
+
+      // Price validation: minimum 1000 VND
+      if (formData.price < 1000) {
+        message.warning("Giá sản phẩm tối thiểu là 1,000₫");
         return;
       }
 
@@ -330,7 +337,7 @@ const AdminProducts: React.FC = () => {
                         {product.categoryName || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">${product.price.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1.5 ${product.stock < 20

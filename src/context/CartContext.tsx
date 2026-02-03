@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { message } from 'antd';
 import { CartItem } from '../types';
 import { cartService } from '../services/cartService';
 import { useAuth } from './AuthContext';
@@ -41,8 +42,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addToCart = async (variantId: number, quantity: number = 1) => {
     if (!user) {
-      // TODO: Handle guest cart with localStorage
-      alert('Please login to add items to cart');
+      message.warning('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
       return;
     }
 

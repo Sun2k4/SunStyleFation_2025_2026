@@ -1,40 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ProductCard from '../../components/user/ProductCard';
 import SkeletonProductCard from '../../components/common/SkeletonProductCard';
 import { productService } from '../../services/productService';
 import { categoryService } from '../../services/categoryService';
 import { Product, Category } from '../../types';
 
-// Helper for artificial delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const sortOptions = [
+  { value: 'newest', label: 'Mới nhất' },
+  { value: 'price_asc', label: 'Giá thấp đến cao' },
+  { value: 'price_desc', label: 'Giá cao đến thấp' },
+];
 
 const Shop: React.FC = () => {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  // Loading States
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Initial Fetch
   useEffect(() => {
     const fetchProducts = async () => {
       setIsInitialLoading(true);
       try {
-        // Parallel fetch and minimum loading time for smooth UX
         const [productsData, categoriesData] = await Promise.all([
           productService.getAllProducts(),
-          categoryService.getAllCategories(),
-          delay(1200) // Minimum 1.2s initial load
+          categoryService.getAllCategories()
         ]);
         setProducts(productsData);
         setCategories(categoriesData);
@@ -44,62 +44,52 @@ const Shop: React.FC = () => {
         setIsInitialLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
-  // Handle Category Change with Delay
-  const handleCategoryChange = async (category: string) => {
+  const handleCategoryChange = (category: string) => {
     if (category === activeCategory) return;
-
-    setIsFiltering(true);
     setActiveCategory(category);
-    // Simulate network request for category switch
-    await delay(800);
-    setIsFiltering(false);
+    setCurrentPage(1);
   };
 
-  // Handle Search with Debounce Effect
   useEffect(() => {
-    // Only trigger loading effect if there is a query or if clearing query
-    // This allows "typing" to feel responsive but "results" to feel calculated
-    let timer: NodeJS.Timeout;
-
-    // Don't trigger on initial mount (when it's empty)
     if (isInitialLoading) return;
-
+    let timer: NodeJS.Timeout;
     setIsFiltering(true);
-    timer = setTimeout(() => {
-      setIsFiltering(false);
-    }, 800);
-
+    timer = setTimeout(() => setIsFiltering(false), 400);
     return () => clearTimeout(timer);
-  }, [searchQuery]); // Note: In real app, we'd debounce the searchQuery state update itself or the API call
+  }, [searchQuery]);
 
-  // Filter Logic
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = activeCategory === 'All' || product.categoryName === activeCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredProducts = products
+    .filter(product => {
+      const matchesCategory = activeCategory === 'All' || product.categoryName === activeCategory;
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc': return a.price - b.price;
+        case 'price_desc': return b.price - a.price;
+        default: return 0;
+      }
+    });
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const currentProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Reset page when filter/search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, sortBy]);
 
   const goToPage = async (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setIsFiltering(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      await delay(600); // Small delay for page processing feel
+      await delay(300);
       setCurrentPage(page);
       setIsFiltering(false);
     }
@@ -107,122 +97,213 @@ const Shop: React.FC = () => {
 
   const isLoading = isInitialLoading || isFiltering;
 
+  const getProductCount = (categoryName: string) => {
+    if (categoryName === 'All') return products.length;
+    return products.filter(p => p.categoryName === categoryName).length;
+  };
+
+  const categoryIcons: Record<string, string> = {
+    'Men': '👔',
+    'Women': '👗',
+    'Footwear': '👟',
+    'Accessories': '👜',
+    'Outerwear': '🧥',
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Header & Filter */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{t('shop.title')}</h1>
-          <p className="text-gray-500 mt-2 text-lg min-h-[1.75rem]">
-            {isLoading ? (
-              <span className="inline-block w-32 h-6 bg-gray-200 rounded animate-pulse"></span>
-            ) : (
-              t('shop.showing', { count: filteredProducts.length })
-            )}
-          </p>
+    <div className="bg-gray-50 min-h-screen">
+      {/* Hero Header */}
+      <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-primary-500 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-          <div className="relative group w-full md:w-72">
-            <Search className="absolute left-4 top-3.5 text-gray-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
-            <input
-              type="text"
-              placeholder={t('shop.search')}
-              className="pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none w-full bg-gray-50 focus:bg-white transition-all shadow-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
+              Cửa Hàng
+            </h1>
+            <p className="mt-3 text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
+              Khám phá bộ sưu tập thời trang đa dạng với hàng trăm sản phẩm chất lượng
+            </p>
+            <div className="mt-6 flex justify-center gap-2">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/20">
+                ✨ Miễn phí vận chuyển
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/20">
+                🔄 Đổi trả 30 ngày
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Categories Tabs */}
-      <div className="flex overflow-x-auto pb-6 mb-6 gap-3 scrollbar-hide">
-        <button
-          onClick={() => handleCategoryChange('All')}
-          className={`px-6 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all duration-300 transform hover:scale-105 ${activeCategory === 'All'
-            ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 ring-2 ring-gray-900 ring-offset-2'
-            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-            }`}
-        >
-          {t('shop.all')}
-        </button>
-        {categories.map(category => (
-          <button
-            key={category.id}
-            onClick={() => handleCategoryChange(category.name)}
-            className={`px-6 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all duration-300 transform hover:scale-105 ${activeCategory === category.name
-              ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 ring-2 ring-gray-900 ring-offset-2'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-              }`}
-          >
-            {category.name}
-          </button>
-        ))}
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      {/* Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <SkeletonProductCard key={index} />
-          ))}
-        </div>
-      ) : currentProducts.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in-up">
-            {currentProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
+        {/* Category Cards - Prominent Section */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Danh mục sản phẩm</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
+            {/* All */}
+            <button
+              onClick={() => handleCategoryChange('All')}
+              className={`group relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl transition-all duration-300 ${activeCategory === 'All'
+                ? 'bg-gray-900 text-white shadow-xl scale-105'
+                : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:scale-102 border border-gray-100'
+                }`}
+            >
+              <span className="text-3xl sm:text-4xl mb-2">🛍️</span>
+              <span className="font-semibold text-sm">Tất cả</span>
+              <span className={`text-xs mt-1 ${activeCategory === 'All' ? 'text-gray-300' : 'text-gray-400'}`}>
+                {getProductCount('All')} SP
+              </span>
+            </button>
+
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryChange(category.name)}
+                className={`group relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl transition-all duration-300 ${activeCategory === category.name
+                  ? 'bg-gray-900 text-white shadow-xl scale-105'
+                  : 'bg-white text-gray-700 shadow-md hover:shadow-lg hover:scale-102 border border-gray-100'
+                  }`}
+              >
+                <span className="text-3xl sm:text-4xl mb-2">{categoryIcons[category.name] || '🏷️'}</span>
+                <span className="font-semibold text-sm">{category.name}</span>
+                <span className={`text-xs mt-1 ${activeCategory === category.name ? 'text-gray-300' : 'text-gray-400'}`}>
+                  {getProductCount(category.name)} SP
+                </span>
+              </button>
             ))}
           </div>
+        </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="mt-16 flex justify-center items-center gap-2">
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-3 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-              >
-                <ChevronLeft size={20} />
-              </button>
+        {/* Toolbar: Search, Sort, Count */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <p className="text-sm text-gray-600">
+              {isLoading ? (
+                <span className="inline-block w-20 h-4 bg-gray-200 rounded animate-pulse"></span>
+              ) : (
+                <><span className="font-bold text-gray-900">{filteredProducts.length}</span> sản phẩm</>
+              )}
+            </p>
 
-              <div className="flex gap-2 mx-4">
+            <div className="flex items-center gap-3">
+              {/* Search - More Prominent */}
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  className="w-full sm:w-72 pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Sort */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <span className="hidden sm:inline">{sortOptions.find(o => o.value === sortBy)?.label}</span>
+                  <span className="sm:hidden">Sắp xếp</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showSortDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowSortDropdown(false)}></div>
+                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-50 overflow-hidden">
+                      {sortOptions.map(option => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortBy(option.value);
+                            setShowSortDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${sortBy === option.value ? 'bg-gray-100 font-medium' : ''
+                            }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <SkeletonProductCard key={index} />
+            ))}
+          </div>
+        ) : currentProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {currentProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-1">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 text-gray-500 hover:text-gray-900 disabled:opacity-30"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
                     onClick={() => goToPage(page)}
-                    className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${currentPage === page
-                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 scale-110'
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
                     {page}
                   </button>
                 ))}
-              </div>
 
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-3 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-32 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-          <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <SlidersHorizontal className="text-gray-400 w-8 h-8" />
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 text-gray-500 hover:text-gray-900 disabled:opacity-30"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <p className="text-gray-500 mb-4">Không tìm thấy sản phẩm nào</p>
+            <button
+              onClick={() => {
+                setActiveCategory('All');
+                setSearchQuery('');
+              }}
+              className="text-sm font-medium text-gray-900 underline"
+            >
+              Xem tất cả sản phẩm
+            </button>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('shop.noProducts')}</h3>
-          <p className="text-gray-500 max-w-sm mx-auto">
-            {t('shop.noProductsDesc')}
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

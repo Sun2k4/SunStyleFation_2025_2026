@@ -164,7 +164,7 @@ export const orderService = {
   // Save address to user_addresses table
   saveAddress: async (
     userId: string,
-    address: Omit<Address, "id" | "user_id">
+    address: Omit<Address, "id" | "user_id" | "created_at" | "is_default">
   ) => {
     const { error } = await supabase.from("user_addresses").insert([
       {

@@ -14,6 +14,7 @@ import {
 import { message } from "antd";
 import { orderService } from "../../../services/orderService";
 import { Order } from "../../../types";
+import { formatPrice } from "../../../utils/currency";
 // Đã xóa import useToast
 
 // Define the strict workflow steps
@@ -183,8 +184,8 @@ const AdminOrders: React.FC = () => {
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border capitalize ${filterStatus === status
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  ? "bg-gray-900 text-white border-gray-900"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                   }`}
               >
                 {status}
@@ -238,7 +239,7 @@ const AdminOrders: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900">
-                        ${order.total.toFixed(2)}
+                        {formatPrice(order.total)}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -349,8 +350,8 @@ const AdminOrders: React.FC = () => {
                               key={step}
                               style={{ width: "25%" }}
                               className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ${isCompleted
-                                  ? "bg-primary-500"
-                                  : "bg-transparent"
+                                ? "bg-primary-500"
+                                : "bg-transparent"
                                 }`}
                             ></div>
                           );
@@ -369,10 +370,10 @@ const AdminOrders: React.FC = () => {
                             <div
                               key={step}
                               className={`text-center w-1/4 ${isActive
-                                  ? "text-primary-600 font-bold"
-                                  : isCompleted
-                                    ? "text-gray-900"
-                                    : "text-gray-400"
+                                ? "text-primary-600 font-bold"
+                                : isCompleted
+                                  ? "text-gray-900"
+                                  : "text-gray-400"
                                 }`}
                             >
                               {step.charAt(0).toUpperCase() + step.slice(1)}
@@ -450,10 +451,7 @@ const AdminOrders: React.FC = () => {
                                   {item.quantity}
                                 </td>
                                 <td className="px-3 py-2 text-right font-medium text-gray-900">
-                                  $
-                                  {(
-                                    item.priceAtPurchase * item.quantity
-                                  ).toFixed(2)}
+                                  {formatPrice(item.priceAtPurchase * item.quantity)}
                                 </td>
                               </tr>
                             ))}
@@ -465,7 +463,7 @@ const AdminOrders: React.FC = () => {
                           Total Amount
                         </span>
                         <span className="font-bold text-xl text-primary-600">
-                          ${selectedOrder.total.toFixed(2)}
+                          {formatPrice(selectedOrder.total)}
                         </span>
                       </div>
                     </div>

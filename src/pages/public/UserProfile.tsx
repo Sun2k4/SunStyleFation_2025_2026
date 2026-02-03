@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { orderService } from "../../services/orderService";
 import { Order } from "../../types";
+import { formatPrice } from "../../utils/currency";
 import {
   Package,
   LogOut,
@@ -167,7 +168,7 @@ const UserProfile: React.FC = () => {
                           Total Amount
                         </span>
                         <span className="font-medium text-gray-900">
-                          ${order.total.toFixed(2)}
+                          {formatPrice(order.total)}
                         </span>
                       </div>
                     </div>
@@ -236,7 +237,7 @@ const UserProfile: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-sm font-medium text-gray-900">
-                          ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                          {formatPrice(item.priceAtPurchase * item.quantity)}
                         </div>
                       </div>
                     ))}
