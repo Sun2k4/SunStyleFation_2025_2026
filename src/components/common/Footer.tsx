@@ -42,12 +42,12 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-bold text-gray-900 mb-4">Stay Connected</h4>
             <div className="flex gap-4 mb-4">
-              <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors"><Facebook size={20} /></a>
-              <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors"><Twitter size={20} /></a>
-              <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors"><Instagram size={20} /></a>
+              <a href="https://www.facebook.com/nguyen.tuan.anh.132717" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary-600 transition-colors"><Facebook size={20} /></a>
+              <a href="https://www.instagram.com/sun_taanh/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary-600 transition-colors"><Twitter size={20} /></a>
+              <a href="https://www.instagram.com/sun_taanh/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary-600 transition-colors"><Instagram size={20} /></a>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Mail size={16} /> support@sunstyle.com
+              <Mail size={16} /> sunstyle@gmail.com
             </div>
           </div>
         </div>

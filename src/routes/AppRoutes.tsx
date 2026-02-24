@@ -22,7 +22,7 @@ const AdminProducts = lazy(() => import("../pages/admin/ProductManagement/index"
 const AdminUsers = lazy(() => import("../pages/admin/UserManagement/index"));
 const AdminOrders = lazy(() => import("../pages/admin/OrderManagement/index"));
 const CategoryManagement = lazy(() => import("../pages/admin/CategoryManagement/CategoryManagement"));
-const DatabaseUtility = lazy(() => import("../pages/admin/DatabaseUtility/index"));
+
 
 // ─── Loading Fallback ───
 const PageLoader = () => (
@@ -189,16 +189,7 @@ export const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/database"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminLayout>
-                <DatabaseUtility />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
+
 
         {/* Placeholders for other admin pages */}
         <Route

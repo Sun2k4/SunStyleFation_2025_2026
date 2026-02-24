@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Tag,
   X,
-  Database,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,7 +23,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: Package, label: "Products", path: "/admin/products" },
     { icon: Tag, label: "Categories", path: "/admin/categories" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: Database, label: "Database", path: "/admin/database" },
   ];
 
   return (

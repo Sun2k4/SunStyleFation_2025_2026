@@ -52,10 +52,12 @@ const AdminProducts: React.FC = () => {
   };
   const [formData, setFormData] = useState(initialFormState);
 
-  // File Upload State
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Multi-Image Upload State
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_IMAGES = 4;
 
   useEffect(() => {
     loadProducts();
@@ -96,10 +98,11 @@ const AdminProducts: React.FC = () => {
 
   // 2. LOGIC MỞ MODAL ĐỂ THÊM MỚI (Reset form)
   const handleOpenAddModal = () => {
-    setEditingId(null); // Đảm bảo không phải chế độ Edit
+    setEditingId(null);
     setFormData(initialFormState);
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+    setExistingImageUrls([]);
     setIsModalOpen(true);
   };
 
@@ -114,8 +117,17 @@ const AdminProducts: React.FC = () => {
       image: product.image || "",
       description: product.description || "",
     });
-    setPreviewUrl(product.image || null);
-    setSelectedFile(null); // Reset file upload mới
+    // Load existing images (main + product_images)
+    const allImages: string[] = [];
+    if (product.image) allImages.push(product.image);
+    if (product.images && product.images.length > 0) {
+      product.images.forEach(img => {
+        if (img && !allImages.includes(img)) allImages.push(img);
+      });
+    }
+    setExistingImageUrls(allImages);
+    setPreviewUrls(allImages);
+    setSelectedFiles([]);
     setIsModalOpen(true);
   };
 
@@ -137,12 +149,36 @@ const AdminProducts: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setFormData((prev) => ({ ...prev, image: "" }));
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files) as File[];
+      const totalImages = previewUrls.length + newFiles.length;
+      if (totalImages > MAX_IMAGES) {
+        message.warning(`Tối đa ${MAX_IMAGES} ảnh cho mỗi sản phẩm`);
+        return;
+      }
+      const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+      setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
+    // Reset input value so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const url = previewUrls[index];
+    // Check if it's an existing image or a new file preview
+    const existingIndex = existingImageUrls.indexOf(url);
+    if (existingIndex !== -1) {
+      // Remove from existing images
+      setExistingImageUrls(prev => prev.filter((_, i) => i !== existingIndex));
+    } else {
+      // Remove from new files (find offset: new files start after existing count)
+      const newFileIndex = index - existingImageUrls.filter(u => previewUrls.includes(u)).length;
+      if (newFileIndex >= 0) {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== newFileIndex));
+      }
+    }
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   // 4. LOGIC SUBMIT (TỰ ĐỘNG CHỌN CREATE HOẶC UPDATE)
@@ -162,23 +198,22 @@ const AdminProducts: React.FC = () => {
         return;
       }
 
-      let finalImageUrl = formData.image;
-
-      if (selectedFile) {
+      // Upload all new files
+      const allImageUrls: string[] = [...existingImageUrls.filter(u => previewUrls.includes(u))];
+      for (const file of selectedFiles) {
         try {
-          finalImageUrl = await productService.uploadImage(selectedFile);
+          const uploadedUrl = await productService.uploadImage(file);
+          allImageUrls.push(uploadedUrl);
         } catch (uploadError) {
           console.error("Upload failed", uploadError);
-          message.error("Failed to upload image");
+          message.error(`Failed to upload image: ${file.name}`);
           setIsSubmitting(false);
           return;
         }
       }
 
-      if (!finalImageUrl && !editingId) {
-        // Nếu thêm mới mà không có ảnh thì lấy ảnh mặc định
-        finalImageUrl = PLACEHOLDER_IMAGE;
-      }
+      // First image = main image, or keep existing, or placeholder
+      const finalImageUrl = allImageUrls.length > 0 ? allImageUrls[0] : (formData.image || PLACEHOLDER_IMAGE);
 
       // Payload chung
       const productPayload = {
@@ -195,17 +230,22 @@ const AdminProducts: React.FC = () => {
 
       if (editingId) {
         // --- UPDATE ---
-        // Lưu ý: Bạn cần đảm bảo productService có hàm updateProduct
         await productService.updateProduct(editingId, productPayload);
+        // Save additional images to product_images table
+        await productService.setProductImages(editingId, allImageUrls.slice(1));
         message.success("Product updated successfully");
       } else {
         // --- CREATE ---
-        await productService.createProduct({
+        const newProduct = await productService.createProduct({
           ...productPayload,
           rating: 0,
           reviews: 0,
           images: [],
         } as any);
+        // Save additional images to product_images table
+        if (allImageUrls.length > 1 && newProduct?.id) {
+          await productService.setProductImages(newProduct.id, allImageUrls.slice(1));
+        }
         message.success("Product created successfully");
       }
 
@@ -567,65 +607,59 @@ const AdminProducts: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Product Image
+                        Product Images <span className="text-gray-400 font-normal">({previewUrls.length}/{MAX_IMAGES})</span>
                       </label>
                       <div className="space-y-3">
-                        {/* Upload Button */}
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            className="hidden"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-                          >
-                            <Upload size={16} />
-                            Upload from Computer
-                          </button>
-                          <span className="text-xs text-gray-500">OR</span>
+                        {/* Image Grid */}
+                        <div className="grid grid-cols-4 gap-3">
+                          {previewUrls.map((url, index) => (
+                            <div key={index} className="relative aspect-square bg-gray-50 rounded-lg border border-gray-200 overflow-hidden group">
+                              <img
+                                src={url}
+                                alt={`Image ${index + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={handleImageError}
+                              />
+                              {index === 0 && (
+                                <div className="absolute top-1 left-1 bg-primary-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                                  Main
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+
+                          {/* Add Button */}
+                          {previewUrls.length < MAX_IMAGES && (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-400 hover:bg-primary-50 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <Plus size={20} className="text-gray-400" />
+                              <span className="text-xs text-gray-400">Add</span>
+                            </button>
+                          )}
                         </div>
 
-                        {/* URL Input */}
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <ImageIcon size={16} className="text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            name="image"
-                            id="image"
-                            placeholder="Paste image URL here..."
-                            className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                            value={formData.image}
-                            onChange={(e) => {
-                              handleInputChange(e);
-                              setPreviewUrl(e.target.value);
-                              setSelectedFile(null);
-                            }}
-                          />
-                        </div>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                        />
 
-                        {/* Preview Area */}
-                        {(previewUrl || formData.image) && (
-                          <div className="mt-2 w-full h-40 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
-                            <img
-                              src={previewUrl || formData.image}
-                              alt="Preview"
-                              className="h-full object-contain"
-                              onError={handleImageError}
-                            />
-                            {selectedFile && (
-                              <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                                Uploading: {selectedFile.name}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <p className="text-xs text-gray-400">
+                          Ảnh đầu tiên sẽ là ảnh chính hiển thị trên danh sách sản phẩm. Tối đa {MAX_IMAGES} ảnh.
+                        </p>
                       </div>
                     </div>
 

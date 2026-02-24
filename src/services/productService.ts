@@ -16,6 +16,13 @@ const mapDbToProduct = (row: any): Product => ({
   // Display fields from joins
   categoryName: row.categories?.name,
 
+  // Product images from product_images table
+  images: row.product_images
+    ? row.product_images
+      .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+      .map((img: any) => img.image_url)
+    : [],
+
   // Nested relations
   variants: row.product_variants || [],
   reviewsList: row.reviews_list || [],
@@ -32,7 +39,8 @@ export const productService = {
       .from("products")
       .select(`
         *,
-        categories(id, name, slug)
+        categories(id, name, slug),
+        product_images(id, image_url, display_order)
       `)
       .order("created_at", { ascending: false });
 
@@ -49,7 +57,8 @@ export const productService = {
       .from("products")
       .select(`
         *,
-        categories(id, name, slug)
+        categories(id, name, slug),
+        product_images(id, image_url, display_order)
       `)
       .not("category_id", "is", null)
       .order("created_at", { ascending: false })
@@ -68,7 +77,8 @@ export const productService = {
       .from("products")
       .select(`
         *,
-        categories(id, name, slug)
+        categories(id, name, slug),
+        product_images(id, image_url, display_order)
       `)
       .not("category_id", "is", null)
       .order("rating", { ascending: false, nullsFirst: false })
@@ -87,6 +97,7 @@ export const productService = {
       .select(`
         *,
         categories(id, name, slug),
+        product_images(id, image_url, display_order),
         product_variants(id, size, color, stock_quantity, sku, price_adjustment),
         reviews_list:reviews(id, rating, comment, created_at, user_id, profiles(full_name, avatar_url))
       `)
@@ -184,5 +195,69 @@ export const productService = {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  },
+
+  // ─── Product Images CRUD ───
+  getProductImages: async (productId: number): Promise<{ id: number; image_url: string; display_order: number }[]> => {
+    const { data, error } = await supabase
+      .from('product_images')
+      .select('*')
+      .eq('product_id', productId)
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching product images:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  addProductImage: async (productId: number, imageUrl: string, displayOrder: number): Promise<void> => {
+    const { error } = await supabase
+      .from('product_images')
+      .insert({ product_id: productId, image_url: imageUrl, display_order: displayOrder });
+
+    if (error) {
+      console.error('Error adding product image:', error);
+      throw error;
+    }
+  },
+
+  deleteProductImage: async (imageId: number): Promise<void> => {
+    const { error } = await supabase
+      .from('product_images')
+      .delete()
+      .eq('id', imageId);
+
+    if (error) {
+      console.error('Error deleting product image:', error);
+      throw error;
+    }
+  },
+
+  setProductImages: async (productId: number, imageUrls: string[]): Promise<void> => {
+    // Delete existing images for this product
+    await supabase
+      .from('product_images')
+      .delete()
+      .eq('product_id', productId);
+
+    // Insert new images with display_order
+    if (imageUrls.length > 0) {
+      const rows = imageUrls.map((url, index) => ({
+        product_id: productId,
+        image_url: url,
+        display_order: index,
+      }));
+
+      const { error } = await supabase
+        .from('product_images')
+        .insert(rows);
+
+      if (error) {
+        console.error('Error setting product images:', error);
+        throw error;
+      }
+    }
   },
 };

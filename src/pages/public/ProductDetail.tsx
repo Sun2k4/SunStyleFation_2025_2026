@@ -100,24 +100,21 @@ const ProductDetail: React.FC = () => {
             >
               <img src={product.image || PLACEHOLDER_IMAGE} alt="Main" className="w-full h-full object-cover" onError={handleImageError} />
             </button>
-            {[1, 2, 3].map((i) => {
-              const imgUrl = `https://picsum.photos/seed/${product.slug}${i}/400/400`;
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(imgUrl)}
-                  className={`aspect-w-1 aspect-h-1 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${selectedImage === imgUrl ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-transparent hover:border-gray-300'
-                    }`}
-                >
-                  <img
-                    src={imgUrl}
-                    alt={`Thumbnail ${i}`}
-                    className="w-full h-full object-cover"
-                    onError={handleImageError}
-                  />
-                </button>
-              );
-            })}
+            {(product.images || []).map((imgUrl, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedImage(imgUrl)}
+                className={`aspect-w-1 aspect-h-1 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${selectedImage === imgUrl ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-transparent hover:border-gray-300'
+                  }`}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`Thumbnail ${i + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={handleImageError}
+                />
+              </button>
+            ))}
           </div>
         </div>
 
