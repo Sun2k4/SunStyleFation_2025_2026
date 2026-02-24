@@ -19,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
 import { formatPrice } from "../../utils/currency";
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
 type PaymentMethod = "cod" | "payos";
 
@@ -347,9 +348,10 @@ const Checkout: React.FC = () => {
                 <div key={item.id} className="flex gap-4 group">
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                     <img
-                      src={item.image}
+                      src={item.image || PLACEHOLDER_IMAGE}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      onError={handleImageError}
                     />
                   </div>
                   <div className="flex-1 min-w-0">

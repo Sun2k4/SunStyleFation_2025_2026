@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/currency';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
 const Cart: React.FC = () => {
   const { t } = useTranslation();
@@ -62,7 +63,7 @@ const Cart: React.FC = () => {
               return (
                 <div key={item.id} className="group flex gap-6 p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
                   <div className="w-32 h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-100 relative">
-                    <img src={item.product?.image} alt={item.product?.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <img src={item.product?.image || PLACEHOLDER_IMAGE} alt={item.product?.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onError={handleImageError} />
                   </div>
 
                   <div className="flex-1 flex flex-col">

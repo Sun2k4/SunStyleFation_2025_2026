@@ -4,6 +4,7 @@ import { ShoppingBag, Heart, Star } from 'lucide-react';
 import { Product } from '../../types';
 import { formatPrice } from '../../utils/currency';
 import { useWishlist } from '../../context/WishlistContext';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
 interface ProductCardProps {
   product: Product;
@@ -32,9 +33,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
         <Link to={`/products/${product.id}`}>
           <img
-            src={product.image}
+            src={product.image || PLACEHOLDER_IMAGE}
             alt={product.name}
             className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
+            onError={handleImageError}
           />
         </Link>
 
@@ -49,8 +51,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <button
           onClick={handleWishlistToggle}
           className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-200 ${inWishlist
-              ? 'bg-red-500 text-white scale-110'
-              : 'bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white hover:scale-110'
+            ? 'bg-red-500 text-white scale-110'
+            : 'bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white hover:scale-110'
             }`}
           title={inWishlist ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
@@ -91,8 +93,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     key={i}
                     size={12}
                     className={`${i < Math.floor(product.rating || 0)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-gray-200 fill-gray-200'
+                      ? 'text-yellow-400 fill-yellow-400'
+                      : 'text-gray-200 fill-gray-200'
                       }`}
                   />
                 ))}

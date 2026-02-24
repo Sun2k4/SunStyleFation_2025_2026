@@ -15,7 +15,8 @@ import { message } from "antd";
 import { useCart } from "../../context/CartContext";
 import { productService } from "../../services/productService";
 import { Product } from "../../types";
-import { formatPrice } from "../../utils/currency";
+import { formatPrice } from '../../utils/currency';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -85,9 +86,10 @@ const ProductDetail: React.FC = () => {
         <div className="space-y-6">
           <div className="aspect-w-4 aspect-h-5 rounded-3xl overflow-hidden bg-gray-50 shadow-sm border border-gray-100 group">
             <img
-              src={selectedImage || product.image}
+              src={selectedImage || product.image || PLACEHOLDER_IMAGE}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              onError={handleImageError}
             />
           </div>
           <div className="grid grid-cols-4 gap-4">
@@ -96,7 +98,7 @@ const ProductDetail: React.FC = () => {
               className={`aspect-w-1 aspect-h-1 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${selectedImage === product.image ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-transparent hover:border-gray-300'
                 }`}
             >
-              <img src={product.image} alt="Main" className="w-full h-full object-cover" />
+              <img src={product.image || PLACEHOLDER_IMAGE} alt="Main" className="w-full h-full object-cover" onError={handleImageError} />
             </button>
             {[1, 2, 3].map((i) => {
               const imgUrl = `https://picsum.photos/seed/${product.slug}${i}/400/400`;
@@ -111,6 +113,7 @@ const ProductDetail: React.FC = () => {
                     src={imgUrl}
                     alt={`Thumbnail ${i}`}
                     className="w-full h-full object-cover"
+                    onError={handleImageError}
                   />
                 </button>
               );

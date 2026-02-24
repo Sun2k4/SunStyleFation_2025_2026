@@ -14,7 +14,8 @@ import {
 import { message } from "antd";
 import { orderService } from "../../../services/orderService";
 import { Order } from "../../../types";
-import { formatPrice } from "../../../utils/currency";
+import { formatPrice } from '../../../utils/currency';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../../utils/placeholderImage';
 // Đã xóa import useToast
 
 // Define the strict workflow steps
@@ -438,9 +439,10 @@ const AdminOrders: React.FC = () => {
                                 <td className="px-3 py-2">
                                   <div className="flex items-center gap-2">
                                     <img
-                                      src={item.product?.image}
+                                      src={item.product?.image || PLACEHOLDER_IMAGE}
                                       alt=""
                                       className="w-8 h-8 rounded object-cover bg-gray-100"
+                                      onError={handleImageError}
                                     />
                                     <span className="font-medium text-gray-900 line-clamp-1">
                                       {item.product?.name}

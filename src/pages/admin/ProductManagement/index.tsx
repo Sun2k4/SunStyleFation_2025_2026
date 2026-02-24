@@ -16,7 +16,8 @@ import { productService } from "../../../services/productService";
 import { categoryService } from "../../../services/categoryService";
 import { Product, Category } from "../../../types";
 import VariantModal from "../../../components/admin/VariantModal";
-import { formatPrice } from "../../../utils/currency";
+import { formatPrice } from '../../../utils/currency';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../../utils/placeholderImage';
 
 const AdminProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -176,7 +177,7 @@ const AdminProducts: React.FC = () => {
 
       if (!finalImageUrl && !editingId) {
         // Nếu thêm mới mà không có ảnh thì lấy ảnh mặc định
-        finalImageUrl = "https://via.placeholder.com/400x500?text=No+Image";
+        finalImageUrl = PLACEHOLDER_IMAGE;
       }
 
       // Payload chung
@@ -318,14 +319,11 @@ const AdminProducts: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <img
                           src={
-                            product.image || "https://via.placeholder.com/40"
+                            product.image || PLACEHOLDER_IMAGE
                           }
                           alt=""
                           className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "https://via.placeholder.com/40?text=IMG";
-                          }}
+                          onError={handleImageError}
                         />
                         <span className="font-medium text-gray-900">
                           {product.name}
@@ -619,10 +617,7 @@ const AdminProducts: React.FC = () => {
                               src={previewUrl || formData.image}
                               alt="Preview"
                               className="h-full object-contain"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  "https://via.placeholder.com/400x500?text=Invalid+Image";
-                              }}
+                              onError={handleImageError}
                             />
                             {selectedFile && (
                               <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">

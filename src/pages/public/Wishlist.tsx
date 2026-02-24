@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Trash2, ShoppingBag } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { formatPrice } from '../../utils/currency';
+import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
 const Wishlist: React.FC = () => {
     const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
@@ -56,9 +57,10 @@ const Wishlist: React.FC = () => {
                         >
                             <div className="relative aspect-[3/4] overflow-hidden">
                                 <img
-                                    src={product.image}
+                                    src={product.image || PLACEHOLDER_IMAGE}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    onError={handleImageError}
                                 />
                                 <button
                                     onClick={() => removeFromWishlist(product.id)}
