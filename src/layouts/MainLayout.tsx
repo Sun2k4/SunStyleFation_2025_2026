@@ -1,9 +1,9 @@
-import React from 'react';
+import type { FC, ReactNode } from 'react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import AIOutfitAssistant from '../components/user/AIOutfitAssistant';
 
-const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const MainLayout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />

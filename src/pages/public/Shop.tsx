@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ProductCard from '../../components/user/ProductCard';

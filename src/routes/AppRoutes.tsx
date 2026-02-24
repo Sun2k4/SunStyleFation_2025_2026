@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Routes, Route, Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import AuthLayout from "../layouts/AuthLayout";
@@ -34,7 +34,37 @@ const PageLoader = () => (
   </div>
 );
 
-export const AppRoutes: React.FC = () => {
+// ─── 404 Not Found ───
+const NotFound = () => (
+  <div className="min-h-[60vh] flex items-center justify-center px-4">
+    <div className="text-center max-w-md">
+      <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+        <span className="text-4xl">🔍</span>
+      </div>
+      <h1 className="text-6xl font-extrabold text-gray-900 mb-2">404</h1>
+      <h2 className="text-xl font-bold text-gray-700 mb-3">Không tìm thấy trang</h2>
+      <p className="text-gray-500 mb-8">
+        Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
+      </p>
+      <div className="flex gap-3 justify-center">
+        <Link
+          to="/"
+          className="px-6 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors shadow-lg"
+        >
+          Về trang chủ
+        </Link>
+        <Link
+          to="/shop"
+          className="px-6 py-3 bg-white text-gray-900 rounded-full font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+          Cửa hàng
+        </Link>
+      </div>
+    </div>
+  </div>
+);
+
+export const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -202,6 +232,16 @@ export const AppRoutes: React.FC = () => {
                 </div>
               </AdminLayout>
             </ProtectedRoute>
+          }
+        />
+
+        {/* 404 - Not Found */}
+        <Route
+          path="*"
+          element={
+            <MainLayout>
+              <NotFound />
+            </MainLayout>
           }
         />
       </Routes>

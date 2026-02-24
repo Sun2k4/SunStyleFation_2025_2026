@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC, MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Heart, Star } from 'lucide-react';
 import { Product } from '../../types';
@@ -10,18 +10,18 @@ interface ProductCardProps {
   product: Product;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const inWishlist = isInWishlist(product.id);
+  const inWishlist = isInWishlist(String(product.id));
 
   // Badge - only show "Mới" for new products
   const badge = product.isNew ? { text: 'Mới', bg: 'bg-emerald-500' } : null;
 
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  const handleWishlistToggle = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (inWishlist) {
-      removeFromWishlist(product.id);
+      removeFromWishlist(String(product.id));
     } else {
       addToWishlist(product);
     }

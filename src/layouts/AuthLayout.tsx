@@ -1,8 +1,8 @@
-import React from 'react';
+import type { FC, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Sun } from 'lucide-react';
 
-const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AuthLayout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <Link to="/" className="flex items-center gap-2 mb-8">

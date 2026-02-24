@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/currency';
 import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
-const Cart: React.FC = () => {
+const Cart: FC = () => {
   const { t } = useTranslation();
   const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const FREE_SHIPPING_THRESHOLD = 500;

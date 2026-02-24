@@ -1,8 +1,8 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Sun, Facebook, Twitter, Instagram, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Footer: React.FC = () => {
+const Footer: FC = () => {
   return (
     <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

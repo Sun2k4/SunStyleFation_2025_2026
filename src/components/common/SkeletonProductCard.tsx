@@ -1,6 +1,6 @@
-import React from 'react';
+import type { FC } from 'react';
 
-const SkeletonProductCard: React.FC = () => {
+const SkeletonProductCard: FC = () => {
     return (
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col h-full animate-pulse">
             {/* Image Skeleton */}

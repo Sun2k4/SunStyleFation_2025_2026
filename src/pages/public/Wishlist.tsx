@@ -1,11 +1,11 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Trash2, ShoppingBag } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { formatPrice } from '../../utils/currency';
 import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
 
-const Wishlist: React.FC = () => {
+const Wishlist: FC = () => {
     const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
 
     if (wishlist.length === 0) {
@@ -63,7 +63,7 @@ const Wishlist: React.FC = () => {
                                     onError={handleImageError}
                                 />
                                 <button
-                                    onClick={() => removeFromWishlist(product.id)}
+                                    onClick={() => removeFromWishlist(String(product.id))}
                                     className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
                                 >
                                     <Trash2 size={16} className="text-red-500" />

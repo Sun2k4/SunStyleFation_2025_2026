@@ -1,4 +1,4 @@
-import React from 'react';
+import type { SyntheticEvent } from 'react';
 
 /**
  * Branded SVG placeholder for missing/broken product images.
@@ -30,8 +30,8 @@ export const PLACEHOLDER_IMAGE = `data:image/svg+xml,${encodeURIComponent(`
  * Swaps the broken image with the branded placeholder and removes
  * the handler to prevent an infinite error loop.
  */
-export const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    img.onerror = null;           // prevent infinite loop
-    img.src = PLACEHOLDER_IMAGE;
+export const handleImageError = (e: SyntheticEvent<HTMLImageElement>) => {
+  const img = e.currentTarget;
+  img.onerror = null;           // prevent infinite loop
+  img.src = PLACEHOLDER_IMAGE;
 };
