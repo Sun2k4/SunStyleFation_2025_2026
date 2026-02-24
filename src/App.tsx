@@ -1,23 +1,26 @@
 import React from 'react';
-import { HashRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AppRoutes } from './routes/AppRoutes';
 import PaymentRedirect from './components/common/PaymentRedirect';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Router>
-            <PaymentRedirect />
-            <AppRoutes />
-          </Router>
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Router>
+              <PaymentRedirect />
+              <AppRoutes />
+            </Router>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
