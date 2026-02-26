@@ -37,8 +37,10 @@ SunStyle Fashion Store là ứng dụng web thương mại điện tử chuyên 
 | 📦 Chi tiết sản phẩm | Ảnh gallery, chọn size/màu, đánh giá |
 | 🛒 Giỏ hàng | Thêm/xóa/cập nhật số lượng |
 | ❤️ Wishlist | Lưu sản phẩm yêu thích |
-| 💳 Thanh toán | Nhập địa chỉ → Chọn phương thức → PayOS |
+| 🎟️ Mã giảm giá | Nhập mã coupon để được giảm giá |
+| 💳 Thanh toán | Nhập địa chỉ → Áp mã giảm giá → Chọn phương thức → PayOS |
 | 👤 Hồ sơ | Quản lý thông tin cá nhân, lịch sử đơn hàng |
+| 🔑 Quên mật khẩu | Đặt lại mật khẩu qua email |
 | 🤖 AI Chat | Tư vấn phong cách thời trang bằng Gemini |
 
 ### 🔧 Admin
@@ -47,9 +49,9 @@ SunStyle Fashion Store là ứng dụng web thương mại điện tử chuyên 
 | 📊 Dashboard | Thống kê doanh thu, đơn hàng, biểu đồ (Recharts) |
 | 📦 Sản phẩm | CRUD sản phẩm + quản lý biến thể (size, màu) |
 | 📂 Danh mục | Quản lý danh mục sản phẩm |
+| 🎟️ Mã giảm giá | CRUD mã coupon, bật/tắt, theo dõi lượt sử dụng |
 | 👥 Người dùng | Quản lý tài khoản khách hàng |
 | 📋 Đơn hàng | Xem, cập nhật trạng thái đơn hàng |
-| 🗄️ Database | Tiện ích quản lý cơ sở dữ liệu |
 
 ---
 
@@ -88,8 +90,8 @@ src/
 │   └── AuthLayout.tsx   #   Layout cho đăng nhập
 ├── pages/               # Page components (lazy-loaded)
 │   ├── public/          #   Home, Shop, Cart, Checkout, ...
-│   ├── auth/            #   UserLogin, AdminLogin
-│   └── admin/           #   Dashboard, Products, Orders, ...
+│   ├── auth/            #   UserLogin, AdminLogin, ForgotPassword, ResetPassword
+│   └── admin/           #   Dashboard, Products, Orders, Coupons, ...
 ├── routes/              # Routing + Guards
 │   ├── AppRoutes.tsx    #   Route definitions + Suspense
 │   └── ProtectedRoute.tsx # Auth + role-based guard
@@ -98,6 +100,7 @@ src/
 │   ├── productService.ts #  Product CRUD
 │   ├── cartService.ts   #   Cart operations
 │   ├── orderService.ts  #   Order management
+│   ├── couponService.ts #   Coupon validation & CRUD
 │   └── ...              #   Other services
 ├── tests/               # Test infrastructure
 │   ├── setup.ts         #   Jest-dom matchers
