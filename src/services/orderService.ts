@@ -237,9 +237,7 @@ export const orderService = {
     if (itemsError) throw itemsError;
 
     // 4. Update Stock (Decrement quantity)
-    // Run sequentially to avoid race conditions or use RPC
     for (const item of orderItems) {
-      console.log('Using RPC to decrement stock for:', item.variant_id);
       if (item.variant_id) {
         const { error: stockError } = await supabase.rpc('decrement_stock', {
           p_variant_id: item.variant_id,
@@ -248,9 +246,6 @@ export const orderService = {
 
         if (stockError) {
           console.error(`Failed to decrement stock for variant ${item.variant_id}:`, stockError);
-          // Optional: We could rollback here, but for now just log it
-        } else {
-          console.log(`Successfully decremented stock for variant ${item.variant_id}`);
         }
       }
     }

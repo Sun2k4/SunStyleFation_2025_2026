@@ -18,13 +18,7 @@ const PaymentRedirect: React.FC = () => {
         const cancelFlag = urlParams.get("cancel");
         const orderCode = urlParams.get("orderCode") || "";
 
-        console.log("PaymentRedirect: Checking params", {
-            paymentStatus,
-            status,
-            cancelFlag,
-            orderCode,
-            fullUrl: window.location.href,
-        });
+
 
         // Skip if no payment-related params
         if (!paymentStatus && !status && !cancelFlag) {
@@ -37,12 +31,10 @@ const PaymentRedirect: React.FC = () => {
         // Check for cancellation (priority)
         if (cancelFlag === "true" || status === "CANCELLED" || paymentStatus === "cancel") {
             targetPath = `/payment/cancel${orderCode ? `?orderCode=${orderCode}` : ""}`;
-            console.log("PaymentRedirect: Cancelled, navigating to", targetPath);
         }
         // Check for success
         else if (status === "PAID" || paymentStatus === "success") {
             targetPath = `/payment/success${orderCode ? `?orderCode=${orderCode}` : ""}`;
-            console.log("PaymentRedirect: Success, navigating to", targetPath);
         }
 
         if (targetPath) {

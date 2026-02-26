@@ -3,7 +3,6 @@ import { Plus, Search, Edit2, Trash2, Tag } from 'lucide-react';
 import { Category } from '../../../types';
 import { categoryService } from '../../../services/categoryService';
 import { message, Modal } from 'antd';
-import { seedDatabase } from '../../../utils/seedData';
 
 const CategoryManagement: React.FC = () => {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -31,18 +30,7 @@ const CategoryManagement: React.FC = () => {
         fetchCategories();
     }, []);
 
-    const handleSeedData = async () => {
-        setLoading(true);
-        try {
-            await seedDatabase();
-            message.success('Database seeded successfully!');
-            fetchCategories();
-        } catch (error) {
-            message.error('Failed to seed database');
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     const handleOpenModal = (category?: Category) => {
         if (category) {
@@ -121,13 +109,6 @@ const CategoryManagement: React.FC = () => {
                     <p className="text-gray-500">Manage product categories</p>
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={handleSeedData}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                        <Tag size={20} />
-                        <span>Seed Data</span>
-                    </button>
                     <button
                         onClick={() => handleOpenModal()}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
