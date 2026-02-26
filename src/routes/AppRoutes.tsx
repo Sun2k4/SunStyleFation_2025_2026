@@ -17,6 +17,8 @@ const UserProfile = lazy(() => import("../pages/public/UserProfile"));
 const Wishlist = lazy(() => import("../pages/public/Wishlist"));
 const UserLogin = lazy(() => import("../pages/auth/UserLogin"));
 const AdminLogin = lazy(() => import("../pages/auth/AdminLogin"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 const Dashboard = lazy(() => import("../pages/admin/Dashboard/index"));
 const AdminProducts = lazy(() => import("../pages/admin/ProductManagement/index"));
 const AdminUsers = lazy(() => import("../pages/admin/UserManagement/index"));
@@ -164,6 +166,22 @@ export const AppRoutes = () => {
           element={
             <AuthLayout>
               <AdminLogin />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <AuthLayout>
+              <ForgotPassword />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <AuthLayout>
+              <ResetPassword />
             </AuthLayout>
           }
         />

@@ -132,7 +132,7 @@ const UserLogin: React.FC = () => {
       } else {
         setError(
           err.message ||
-            "Authentication failed. Please check your network connection."
+          "Authentication failed. Please check your network connection."
         );
       }
     } finally {
@@ -219,6 +219,17 @@ const UserLogin: React.FC = () => {
             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white"
           />
         </div>
+
+        {isLogin && (
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-primary-600 hover:text-primary-700 hover:underline transition-colors font-medium"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
+        )}
 
         <button
           type="submit"

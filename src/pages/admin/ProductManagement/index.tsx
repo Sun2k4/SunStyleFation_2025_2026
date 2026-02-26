@@ -193,7 +193,7 @@ const AdminProducts: React.FC = () => {
       }
 
       // Price validation: minimum 1000 VND
-      if (formData.price < 1000) {
+      if (parseFloat(formData.price) < 1000) {
         message.warning("Giá sản phẩm tối thiểu là 1,000₫");
         return;
       }
