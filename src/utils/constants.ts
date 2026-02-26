@@ -131,7 +131,9 @@ export const MOCK_ORDERS: Order[] = [
     payment_method: "credit_card",
     shipping_address_id: null,
     tracking_number: null,
-    notes: null
+    notes: null,
+    coupon_code: null,
+    discount_amount: 0
   },
   {
     id: 9921,
@@ -144,7 +146,9 @@ export const MOCK_ORDERS: Order[] = [
     payment_method: "credit_card",
     shipping_address_id: null,
     tracking_number: null,
-    notes: null
+    notes: null,
+    coupon_code: null,
+    discount_amount: 0
   },
   {
     id: 1102,
@@ -157,6 +161,8 @@ export const MOCK_ORDERS: Order[] = [
     payment_method: "credit_card",
     shipping_address_id: null,
     tracking_number: null,
-    notes: null
+    notes: null,
+    coupon_code: null,
+    discount_amount: 0
   }
 ];

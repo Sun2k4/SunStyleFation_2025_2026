@@ -63,7 +63,7 @@ const Wishlist: FC = () => {
                                     onError={handleImageError}
                                 />
                                 <button
-                                    onClick={() => removeFromWishlist(String(product.id))}
+                                    onClick={() => removeFromWishlist(product.id)}
                                     className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
                                 >
                                     <Trash2 size={16} className="text-red-500" />

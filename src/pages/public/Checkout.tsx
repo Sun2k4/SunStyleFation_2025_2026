@@ -13,13 +13,17 @@ import {
   ShieldCheck,
   Wallet,
   QrCode,
+  Tag,
+  X,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { orderService } from "../../services/orderService";
 import { paymentService } from "../../services/paymentService";
+import { couponService } from "../../services/couponService";
 import { formatPrice } from "../../utils/currency";
 import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
+import { CouponValidationResult } from "../../types";
 
 type PaymentMethod = "cod" | "payos";
 
@@ -32,6 +36,15 @@ const Checkout: React.FC = () => {
   const [step, setStep] = useState<"details" | "success">("details");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const discountAmount = appliedCoupon?.valid ? (appliedCoupon.discount || 0) : 0;
+  const finalTotal = cartTotal - discountAmount;
+
   const [formData, setFormData] = useState({
     recipientName: user?.name || "",
     phoneNumber: "",
@@ -42,6 +55,33 @@ const Checkout: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    setAppliedCoupon(null);
+
+    try {
+      const result = await couponService.validateCoupon(couponCode, cartTotal);
+      if (result.valid) {
+        setAppliedCoupon(result);
+        message.success(`Áp dụng mã "${result.code}" thành công!`);
+      } else {
+        setCouponError(result.error || "Mã giảm giá không hợp lệ");
+      }
+    } catch {
+      setCouponError("Không thể kiểm tra mã giảm giá");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +106,19 @@ const Checkout: React.FC = () => {
       });
 
       // 2. Create Order
-      const order = await orderService.createOrder(user.id, cart, cartTotal);
+      const order = await orderService.createOrder(
+        user.id,
+        cart,
+        finalTotal,
+        undefined,
+        appliedCoupon?.valid ? appliedCoupon.code : undefined,
+        appliedCoupon?.valid ? discountAmount : undefined
+      );
+
+      // Mark coupon as used
+      if (appliedCoupon?.valid && appliedCoupon.code) {
+        await couponService.useCoupon(appliedCoupon.code);
+      }
 
       // 3. Handle payment based on method
       if (paymentMethod === "payos") {
@@ -74,7 +126,7 @@ const Checkout: React.FC = () => {
         const paymentResult = await paymentService.createPayment(
           String(order.id),
           cart,
-          cartTotal,
+          finalTotal,
           {
             name: formData.recipientName,
             email: user.email,
@@ -348,25 +400,74 @@ const Checkout: React.FC = () => {
                 <div key={item.id} className="flex gap-4 group">
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                     <img
-                      src={item.image || PLACEHOLDER_IMAGE}
-                      alt={item.name}
+                      src={item.product?.image || PLACEHOLDER_IMAGE}
+                      alt={item.product?.name || ''}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={handleImageError}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1">
-                      {item.name}
+                      {item.product?.name}
                     </h4>
                     <p className="text-xs font-medium text-gray-500 bg-gray-50 inline-block px-2 py-0.5 rounded">
                       SL: {item.quantity}
                     </p>
                   </div>
                   <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice((item.product?.price || 0) * item.quantity)}
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Coupon Input */}
+            <div className="border-t border-gray-200 pt-4 mb-4">
+              <label className="text-sm font-bold text-gray-700 mb-2 block">Mã giảm giá</label>
+              {appliedCoupon?.valid ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Tag size={16} className="text-green-600" />
+                    <span className="font-bold text-green-700">{appliedCoupon.code}</span>
+                    <span className="text-sm text-green-600">(-{formatPrice(discountAmount)})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value.toUpperCase());
+                      setCouponError(null);
+                    }}
+                    placeholder="Nhập mã giảm giá"
+                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  >
+                    {couponLoading ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      "Áp dụng"
+                    )}
+                  </button>
+                </div>
+              )}
+              {couponError && (
+                <p className="text-xs text-red-500 mt-2 font-medium">{couponError}</p>
+              )}
             </div>
 
             <div className="border-t border-gray-200 pt-4 space-y-2">
@@ -378,9 +479,18 @@ const Checkout: React.FC = () => {
                 <span>Phí vận chuyển</span>
                 <span className="text-green-600 font-bold">Miễn phí</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Tag size={14} />
+                    Giảm giá
+                  </span>
+                  <span className="font-bold">-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-end pt-4 border-t border-gray-100 mt-4">
                 <span className="font-bold text-gray-900 text-lg">Tổng cộng</span>
-                <span className="text-2xl font-extrabold text-gray-900">{formatPrice(cartTotal)}</span>
+                <span className="text-2xl font-extrabold text-gray-900">{formatPrice(finalTotal)}</span>
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   ArrowLeft,
   Tag,
+  Ticket,
   X,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: ShoppingBag, label: "Orders", path: "/admin/orders" },
     { icon: Package, label: "Products", path: "/admin/products" },
     { icon: Tag, label: "Categories", path: "/admin/categories" },
+    { icon: Ticket, label: "Coupons", path: "/admin/coupons" },
     { icon: Users, label: "Users", path: "/admin/users" },
   ];
 

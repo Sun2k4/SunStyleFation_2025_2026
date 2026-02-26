@@ -95,6 +95,21 @@ export interface Address extends Tables<'user_addresses'> {
   // Inherits all fields from database
 }
 
+// Coupon inherits from auto-generated types
+export interface Coupon extends Tables<'coupons'> {
+  // Inherits: id, code, discount_type, discount_value, min_order_amount, max_discount,
+  //           usage_limit, used_count, start_date, end_date, is_active, created_at
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  error?: string;
+  discount?: number;
+  discount_type?: string;
+  discount_value?: number;
+  code?: string;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: string;

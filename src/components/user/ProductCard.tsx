@@ -12,7 +12,7 @@ interface ProductCardProps {
 
 const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const inWishlist = isInWishlist(String(product.id));
+  const inWishlist = isInWishlist(product.id);
 
   // Badge - only show "Mới" for new products
   const badge = product.isNew ? { text: 'Mới', bg: 'bg-emerald-500' } : null;
@@ -21,7 +21,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (inWishlist) {
-      removeFromWishlist(String(product.id));
+      removeFromWishlist(product.id);
     } else {
       addToWishlist(product);
     }

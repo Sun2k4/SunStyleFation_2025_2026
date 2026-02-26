@@ -24,6 +24,7 @@ const AdminProducts = lazy(() => import("../pages/admin/ProductManagement/index"
 const AdminUsers = lazy(() => import("../pages/admin/UserManagement/index"));
 const AdminOrders = lazy(() => import("../pages/admin/OrderManagement/index"));
 const CategoryManagement = lazy(() => import("../pages/admin/CategoryManagement/CategoryManagement"));
+const CouponManagement = lazy(() => import("../pages/admin/CouponManagement/index"));
 
 
 // ─── Loading Fallback ───
@@ -233,6 +234,16 @@ export const AppRoutes = () => {
             <ProtectedRoute adminOnly>
               <AdminLayout>
                 <AdminOrders />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/coupons"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout>
+                <CouponManagement />
               </AdminLayout>
             </ProtectedRoute>
           }

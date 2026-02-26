@@ -50,7 +50,7 @@ export const categoryService = {
         }));
     },
 
-    createCategory: async (category: Omit<Category, "id" | "productCount">): Promise<Category> => {
+    createCategory: async (category: Omit<Category, "id" | "productCount" | "created_at">): Promise<Category> => {
         const { data, error } = await supabase
             .from("categories")
             .insert([category])

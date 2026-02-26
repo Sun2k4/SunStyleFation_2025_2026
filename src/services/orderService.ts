@@ -17,6 +17,8 @@ export const orderService = {
         tracking_number,
         notes,
         user_id,
+        coupon_code,
+        discount_amount,
         profiles:user_id (
           full_name,
           email
@@ -50,6 +52,8 @@ export const orderService = {
       shipping_address_id: row.shipping_address_id,
       tracking_number: row.tracking_number,
       notes: row.notes,
+      coupon_code: row.coupon_code || null,
+      discount_amount: row.discount_amount ? Number(row.discount_amount) : 0,
       userInfo: {
         name: row.profiles?.full_name || "Unknown User",
         email: row.profiles?.email || "No Email",
@@ -96,6 +100,8 @@ export const orderService = {
         shipping_address_id,
         tracking_number,
         notes,
+        coupon_code,
+        discount_amount,
         order_items (
           id,
           quantity,
@@ -126,6 +132,8 @@ export const orderService = {
       shipping_address_id: row.shipping_address_id,
       tracking_number: row.tracking_number,
       notes: row.notes,
+      coupon_code: row.coupon_code || null,
+      discount_amount: row.discount_amount ? Number(row.discount_amount) : 0,
       items: row.order_items.map((item: any) => ({
         id: item.id,
         orderId: row.id,
@@ -181,7 +189,9 @@ export const orderService = {
     userId: string,
     items: CartItem[],
     total: number,
-    address?: any
+    address?: any,
+    couponCode?: string,
+    discountAmount?: number
   ): Promise<Order | null> => {
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
@@ -190,6 +200,8 @@ export const orderService = {
           user_id: userId,
           total_amount: total,
           status: "pending",
+          coupon_code: couponCode || null,
+          discount_amount: discountAmount || 0,
         },
       ])
       .select()
@@ -254,6 +266,8 @@ export const orderService = {
       shipping_address_id: orderData.shipping_address_id,
       tracking_number: orderData.tracking_number,
       notes: orderData.notes,
+      coupon_code: orderData.coupon_code || null,
+      discount_amount: orderData.discount_amount ? Number(orderData.discount_amount) : 0,
       items: items as any,
     };
   },

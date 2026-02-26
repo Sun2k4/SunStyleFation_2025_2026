@@ -6,8 +6,8 @@ interface WishlistContextType {
     wishlist: Product[];
     wishlistCount: number;
     addToWishlist: (product: Product) => void;
-    removeFromWishlist: (productId: string) => void;
-    isInWishlist: (productId: string) => boolean;
+    removeFromWishlist: (productId: number) => void;
+    isInWishlist: (productId: number) => boolean;
     clearWishlist: () => void;
 }
 
@@ -30,12 +30,12 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     };
 
-    const removeFromWishlist = (productId: string) => {
+    const removeFromWishlist = (productId: number) => {
         setWishlist(prev => prev.filter(item => item.id !== productId));
         message.info('Đã xóa khỏi danh sách yêu thích');
     };
 
-    const isInWishlist = (productId: string) => {
+    const isInWishlist = (productId: number) => {
         return wishlist.some(item => item.id === productId);
     };
 
