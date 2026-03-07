@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Star,
@@ -17,6 +17,7 @@ import { productService } from "../../services/productService";
 import { Product } from "../../types";
 import { formatPrice } from '../../utils/currency';
 import { PLACEHOLDER_IMAGE, handleImageError } from '../../utils/placeholderImage';
+import ReviewSection from '../../components/user/ReviewSection';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,11 @@ const ProductDetail: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>("M");
   const [selectedColor, setSelectedColor] = useState<string>("Black");
   const [addingToCart, setAddingToCart] = useState(false);
+  const [reviewStats, setReviewStats] = useState<{ average: number; total: number }>({ average: 0, total: 0 });
+
+  const handleReviewStatsChange = useCallback((stats: { average: number; total: number }) => {
+    setReviewStats(stats);
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -148,10 +154,10 @@ const ProductDetail: React.FC = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <span className="font-bold text-gray-900">{product.rating}</span>
+                <span className="font-bold text-gray-900">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : (product.rating || 0)}</span>
               </div>
               <span className="text-gray-300">|</span>
-              <span className="text-gray-500 text-sm font-medium">{product.reviews} reviews</span>
+              <span className="text-gray-500 text-sm font-medium">{reviewStats.total > 0 ? reviewStats.total : (product.reviews || 0)} reviews</span>
             </div>
           </div>
 
@@ -297,6 +303,9 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <ReviewSection productId={product.id} onStatsChange={handleReviewStatsChange} />
     </div>
   );
 };
